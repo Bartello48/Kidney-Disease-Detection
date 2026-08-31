@@ -8,3 +8,11 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Private data
+.env
+
+# Personal
+links
+papers
+diagnostics/
