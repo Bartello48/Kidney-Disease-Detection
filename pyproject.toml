@@ -10,7 +10,9 @@ dependencies = [
     "numpy>=2.5.1",
     "pandas>=3.0.5",
     "python-dotenv>=1.2.2",
+    "scikit-image>=0.26.0",
     "torch>=2.13.0",
+    "torchvision>=0.28.0",
 ]
 
 [dependency-groups]
