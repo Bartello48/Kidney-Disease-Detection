@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from data.kits_dataset import Kits23Dataset
 
-print("Environment:")
+print("--- Environment ---")
 print(f"system version: {sys.version}")
 print(f"PyTorch version: {torch.__version__}")
 print(f"Torchvision version: {torchvision.__version__}")
@@ -22,9 +22,25 @@ transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor()
 ])
-dataset = Kits23Dataset(os.getenv("DATABASE_PATH"), transform)
+dataset = Kits23Dataset(os.getenv("DATABASE_PATH"), crop_margin=20)
 
-data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
+sample = dataset[0]
 
-print(len(dataset))
-print(dataset.classes)
+print(sample["image"].shape)
+print(sample["mask"].shape)
+print(sample["case_id"])
+print(sample["slice_id"])
+
+sample = dataset[150]
+
+print(sample["image"].shape)
+print(sample["mask"].shape)
+print(sample["case_id"])
+print(sample["slice_id"])
+
+
+
+# data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
+
+# print(len(dataset))
+# print(dataset.classes)
