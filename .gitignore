@@ -12,9 +12,13 @@ wheels/
 # Private data
 .env
 
+# Results
+*.png
+
 # Personal
 links
 papers
 diagnostics/
 concepts.md
 todo
+notes.txt
