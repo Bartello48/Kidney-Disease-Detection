@@ -179,8 +179,9 @@ def process_case(
             {
                 "image": image_slice,
                 "mask": mask_slice,
-                "case_id": case_path.name,
-                "slice_idx": slice_id,
+                "case_id": int(case_path.name.split('_')[1]),
+                "slice_id": slice_id,
+                "file_path": file_path
             },
             file_path,
         )

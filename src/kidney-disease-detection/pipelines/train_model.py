@@ -2,9 +2,7 @@ import os
 import sys
 
 import torch
-from torch.utils.data import DataLoader
 import torchvision
-from torchvision.transforms import transforms
 
 from dotenv import load_dotenv
 
@@ -18,29 +16,7 @@ print(f"Torchvision version: {torchvision.__version__}")
 
 load_dotenv(override=True)
 
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor()
-])
-dataset = Kits23Dataset(os.getenv("DATABASE_PATH"), crop_margin=20)
-
-sample = dataset[0]
-
-print(sample["image"].shape)
-print(sample["mask"].shape)
-print(sample["case_id"])
-print(sample["slice_id"])
-
-sample = dataset[150]
-
-print(sample["image"].shape)
-print(sample["mask"].shape)
-print(sample["case_id"])
-print(sample["slice_id"])
-
-
-
-# data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
-
-# print(len(dataset))
-# print(dataset.classes)
+dataset = Kits23Dataset(os.getenv("PREPROCESSED_PATH"))
+print(len(dataset))
+dataset.save_image(1000)
+dataset.save_map(1000)
