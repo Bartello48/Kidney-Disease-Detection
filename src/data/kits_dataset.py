@@ -7,23 +7,30 @@ import matplotlib.pyplot as plt
 
 
 class Kits23Dataset(Dataset):
-    def __init__(self, data_path: str):
-        self._data_path = Path(data_path)
-        self._files = self._data_path / "slices"
-        if not self._files.exists():
-            raise FileNotFoundError("Invalid preprocessed folder data organization")
-        self._data = sorted(
-            self._files.glob("*.pt")
-        )
-        if len(self._data) == 0:
-            raise FileNotFoundError("did not find any images under given path")
+    def __init__(self, data_slices: list[str]) -> None:
+        self._data = data_slices
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __getitem__(self, index: int) -> tuple[torch.tensor, torch.tensor, int, int]:
+    def __get_item__(self, index: int) -> tuple[torch.tensor, torch.tensor]:
         sample = torch.load(
-            self._data[index],
+            Path(self._data[index]),
+            weights_only=True
+        )
+        tumor_present = torch.any(sample['mask'] == 2)
+        cyst_present = torch.any(sample['mask'] == 3)
+
+        labels = torch.tensor(
+            [tumor_present, cyst_present],
+            dtype=torch.float32
+        )
+
+        return sample['image'], labels
+
+    def get_slice(self, index: int) -> tuple[torch.tensor, torch.tensor, int, int]:
+        sample = torch.load(
+            Path(self._data[index]),
             weights_only=True
         )
         return sample['image'], sample['mask'], sample['case_id'], sample['slice_id']

@@ -30,24 +30,24 @@ def split_cases(
     rng = random.Random(seed)
     rng.shuffle(cases)
 
-    train = cases[:n_train_cases]
-    validate = cases[n_train_cases:n_train_cases + n_validation_cases]
-    test = cases[
+    train_cases = cases[:n_train_cases]
+    validate_cases = cases[n_train_cases:n_train_cases + n_validation_cases]
+    test_cases = cases[
         n_train_cases + n_validation_cases:
         n_train_cases + n_validation_cases + n_train_cases
     ]
 
-    train_cases = []
-    validation_cases = []
-    test_cases = []
+    train_slices = []
+    validation_slices = []
+    test_slices = []
     for path in slices_path.glob("*.pt"):
         case_id = path.name.split("_slice_")[0]
-        if case_id in train:
-            train_cases.append(str(path))
-        elif case_id in validate:
-            validation_cases.append(str(path))
-        elif case_id in test:
-            test_cases.append(str(path))
+        if case_id in train_cases:
+            train_slices.append(str(path))
+        elif case_id in validate_cases:
+            validation_slices.append(str(path))
+        elif case_id in test_cases:
+            test_slices.append(str(path))
         else:
             raise IndexError("No said case present")
 
@@ -55,12 +55,15 @@ def split_cases(
     payload = {
         "seed": seed,
         "timestamp": now.strftime("%d/%m/%Y, %H:%M:%S"),
-        "n_train": n_train_cases,
-        "n_validation": n_validation_cases,
-        "n_test": n_test_cases,
-        "train_cases": train_cases,
-        "validation_cases": validation_cases,
-        "test_cases": test_cases
+        "n_train_cases": n_train_cases,
+        "n_train_slices": len(train_slices),
+        "n_validation_cases": n_validation_cases,
+        "n_validation_slices": len(validation_slices),
+        "n_test_cases": n_test_cases,
+        "n_test_slices": len(test_slices),
+        "train_slices": train_slices,
+        "validation_slices": validation_slices,
+        "test_slices": test_slices
     }
 
     with Path.open(data_path / file_name, '+w') as fh:
