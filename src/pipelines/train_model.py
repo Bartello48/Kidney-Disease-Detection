@@ -3,6 +3,7 @@ import sys
 import json
 import argparse
 from pathlib import Path
+from datetime import datetime
 
 import torch
 import torch.nn as nn
@@ -13,8 +14,7 @@ import torchvision
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from src.models.EfficientNetClassifier import EfficientNetClassifier
-
+from models.EfficientNetClassifier import EfficientNetClassifier
 from data.kits_dataset import Kits23Dataset
 from pipelines.split_cases import split_cases
 
@@ -35,8 +35,18 @@ def train_model(
     print(device)
     model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    # test criterion
+    # image, label = next(iter(train_loader))
+    # image, label = image.to(device), label.to(device)
+    # print(f"image shape: {image.shape}")
+    # print(f"labels: {label}, labels shape: {label.shape}")
+    # output = model(image)
+    # print(f"model output: {output}, shape: {output.shape}")
+    # print(criterion(output, label))
+    # -------------------
 
     train_losses, validation_losses = [], []
 
@@ -97,13 +107,16 @@ def main(
     if not split:
         raise AttributeError("No split generated / found")
 
-    model = MODELS.get(model_name)
+    model = MODELS.get(model_name)(num_classes=2)
     if model is None:
         raise ValueError(f"No model matching provieded name: {model_name}")
 
     train_set = Kits23Dataset(split['train_slices'])
     validation_set = Kits23Dataset(split['validation_slices'])
-    test_set = Kits23Dataset(split['test_slices'])
+
+    # test dataset
+    # print(f'dataset shape image: {train_set[1000][0].shape}, labels: {train_set[1000][1].shape}')
+    # ----------------------
 
     train_loader = DataLoader(
         train_set,
@@ -115,25 +128,35 @@ def main(
         batch_size=int(os.getenv("VALIDATION_BATCH_SIZE")),
         shuffle=False
     )
-    test_loader = DataLoader(
-        test_set,
-        batch_size=int(os.getenv("TEST_BATCH_SIZE")),
-        shuffle=False
-    )
+
+    # test loader
+    # l_image, l_label = next(iter(train_loader))
+    # print(f"loader shape image: {l_image.shape}, label: {l_label.shape}")
+    # print(f"loader labels: {l_label}")
+    # test model
+    # print(f"test model: {model(l_image)}, \nshape:{model(l_image).shape}")
+    # -------------------------------
 
     train_model(
         train_loader,
         validation_loader,
-        test_loader,
         model,
         learning_rate,
         epochs
     )
 
-    # dataset = Kits23Dataset(os.getenv("PREPROCESSED_PATH"))
-    # print(len(dataset))
-    # dataset.save_image(1000)
-    # dataset.save_map(1000)
+    # save model
+    model.train_data_path = file_path
+    model_path = Path(os.getenv("TRAINED_MODELS"))
+    model_path.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+    now = datetime.now()
+    now = now.strftime("%d-%m-%Y_%H-%M-%S")
+    model_path = model_path / f"{model_name}_{now}.model"
+    with Path.open(model_path, 'w+') as fh:
+        torch.save(model, fh)
 
 
 if __name__ == '__main__':
@@ -150,7 +173,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'model_name',
         type=str,
-        help=f'choose one from available models: {MODELS}'
+        help=f'choose one from available models: {MODELS.keys()}'
     )
     parser.add_argument(
         '--lr',

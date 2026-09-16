@@ -13,7 +13,13 @@ class Kits23Dataset(Dataset):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __get_item__(self, index: int) -> tuple[torch.tensor, torch.tensor]:
+    def __getitem__(self, index: int) -> tuple[torch.tensor, torch.tensor]:
+        """
+        return value:
+        python tuple,
+        first value (image): torch tensor of size [1, 256, 256]
+        second value (label): torch tensor of size [2]
+        """
         sample = torch.load(
             Path(self._data[index]),
             weights_only=True

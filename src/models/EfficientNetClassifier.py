@@ -6,6 +6,7 @@ from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 class EfficientNetClassifier(nn.Module):
     def __init__(self, num_classes: int = 2) -> None:
         super(EfficientNetClassifier, self).__init__()
+        self.train_data_path = None
 
         self._model = efficientnet_b0(
             weights=EfficientNet_B0_Weights.DEFAULT
