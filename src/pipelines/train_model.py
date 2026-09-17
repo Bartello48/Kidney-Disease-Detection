@@ -155,7 +155,7 @@ def main(
     now = datetime.now()
     now = now.strftime("%d-%m-%Y_%H-%M-%S")
     model_path = model_path / f"{model_name}_{now}.model"
-    with Path.open(model_path, 'w+') as fh:
+    with Path.open(model_path, 'wb') as fh:
         torch.save(model, fh)
 
 

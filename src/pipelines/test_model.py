@@ -17,18 +17,17 @@ def test_model(
     threshold_cancer: float = 0.5,
     threshold_cyst: float = 0.5
 ):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
     # load model
     model = None
     load_dotenv(override=True)
     model_path = Path(str(os.getenv('TRAINED_MODELS')))
     model_path = model_path / model_name
-    with Path.open(model_path, 'r') as fh:
-        model: torch.nn.Module = torch.load(fh)
+    with Path.open(model_path, 'rb') as fh:
+        model: torch.nn.Module = torch.load(fh, map_location=device, weights_only=False)
     if model is None:
         raise FileExistsError("Couldnt find specified model file")
 
-    # activate cuda
-    device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
     model.to(device)
     model.eval()
 
