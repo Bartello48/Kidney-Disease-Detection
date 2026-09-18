@@ -14,7 +14,7 @@ class EfficientNetClassifier(nn.Module):
 
         # change 3-channel RGB to 1-channel grayscale
         old_conv = self._model.features[0][0]
-        self._model.features[0][0] = nn.Conv2d(
+        new_conv = nn.Conv2d(
             in_channels=1,
             out_channels=old_conv.out_channels,
             kernel_size=old_conv.kernel_size,
@@ -22,6 +22,11 @@ class EfficientNetClassifier(nn.Module):
             padding=old_conv.padding,
             bias=False
         )
+        with torch.no_grad():
+            new_conv.weight.copy_(
+                old_conv.weight.mean(dim=1, keepdim=True)
+            )
+        self._model.features[0][0] = new_conv
 
         # replace classifier with 2-classes classifier
         in_features = self._model.classifier[1].in_features

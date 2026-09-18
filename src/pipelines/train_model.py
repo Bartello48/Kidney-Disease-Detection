@@ -36,7 +36,26 @@ def train_model(
     model.to(device)
 
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(
+        [
+            {
+                "params": model._model.features.parameters(),
+                "lr": learning_rate
+            },
+            {
+                "params": model._model.classifier.parameters(),
+                "lr": learning_rate / 10
+            }
+        ]
+    )
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='min',
+        factor=0.5,
+        patience=1,
+        min_lr=1e-7
+    )
 
     # test criterion
     # image, label = next(iter(train_loader))
@@ -75,10 +94,14 @@ def train_model(
         validation_loss = running_loss / len(validation_loader.dataset)
         validation_losses.append(validation_loss)
 
+        scheduler.step(validation_loss)
+        current_lr = optimizer.param_groups[0]['lr']
+
         # TEMPORARY
         print(
             f"""Epoch {epoch + 1}|{epochs} - train loss: {train_loss},
-            validation loss: {validation_loss}"""
+            validation loss: {validation_loss}
+            new learning rate: {current_lr}"""
         )
 
 
