@@ -1,11 +1,15 @@
 import torch
 import torch.nn as nn
+from models.BaseModel import BaseModel
 from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
 
-class EfficientNetClassifier(nn.Module):
+class EfficientNetClassifier(BaseModel):
     def __init__(self, num_classes: int = 2) -> None:
         super(EfficientNetClassifier, self).__init__()
+
+        self.model_name = 'efficientnet_b0'
+        self.model_path = None
         self.train_data_path = None
 
         self._model = efficientnet_b0(

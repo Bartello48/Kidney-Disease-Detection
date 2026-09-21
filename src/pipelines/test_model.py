@@ -1,32 +1,27 @@
 import os
 import json
 from pathlib import Path
+
 from argparse import ArgumentParser
 
 import torch
 from torch.utils.data import DataLoader
 
-from dotenv import load_dotenv
 from tqdm import tqdm
 
+from models.ModelStorage import ModelStorage
+from models.EvaluationMetric import EvaluationMetric
 from data.kits_dataset import Kits23Dataset
 
 
 def test_model(
-    model_name: str,
+    save_name: str,
     threshold_cancer: float = 0.5,
     threshold_cyst: float = 0.5
 ):
     device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
     # load model
-    model = None
-    load_dotenv(override=True)
-    model_path = Path(str(os.getenv('TRAINED_MODELS')))
-    model_path = model_path / model_name
-    with Path.open(model_path, 'rb') as fh:
-        model: torch.nn.Module = torch.load(fh, map_location=device, weights_only=False)
-    if model is None:
-        raise FileExistsError("Couldnt find specified model file")
+    model = ModelStorage.load_model(save_name)
 
     model.to(device)
     model.eval()
@@ -60,45 +55,60 @@ def test_model(
 
             predictions = torch.sigmoid(model(images)) >= threshold
 
-            tp += ((predictions == 1) and (labels == 1)).sum(dim=0)
-            tn += ((predictions == 0) and (labels == 0)).sum(dim=0)
-            fp += ((predictions == 1) and (labels == 0)).sum(dim=0)
-            fn += ((predictions == 0) and (labels == 1)).sum(dim=0)
+            tp += ((predictions == 1) & (labels == 1)).sum(dim=0)
+            tn += ((predictions == 0) & (labels == 0)).sum(dim=0)
+            fp += ((predictions == 1) & (labels == 0)).sum(dim=0)
+            fn += ((predictions == 0) & (labels == 1)).sum(dim=0)
 
     precission = tp.float() / (tp + fp).clamp_min(1)
     recall = tp.float() / (tp + fn).clamp_min(1)
-    f1 = (2 * predictions * recall) / (precission + recall).clamp_min(1e-8)
+    f1 = (
+        2 * precission * recall
+        / (precission + recall).clamp_min(1e-8)
+    )
     accuracy = (tp + tn).float() / (tp + tn + fp + fn).clamp_min(1)
     # cancer
     print("--- CANCER ---")
-    print(f"{tp[0].item()}\t{fn[0].item()}")
-    print(f"{fp[0].item()}\t{tn[0].item()}")
+    print(f"tp: {tp[0].item()}\tfn: {fn[0].item()}")
+    print(f"fp: {fp[0].item()}\ttn: {tn[0].item()}")
     print(f"Accuracy: {accuracy[0].item()}")
     print(f"Precission: {precission[0].item()}")
     print(f"Recall: {recall[0].item()}")
     print(f"F1 score: {f1[0].item()}")
     # cyst
     print("--- CYST ---")
-    print(f"{tp[1].item()}\t{fn[1].item()}")
-    print(f"{fp[1].item()}\t{tn[1].item()}")
+    print(f"tp: {tp[1].item()}\tfn: {fn[1].item()}")
+    print(f"fp: {fp[1].item()}\ttn: {tn[1].item()}")
     print(f"Accuracy: {accuracy[1].item()}")
     print(f"Precission: {precission[1].item()}")
     print(f"Recall: {recall[1].item()}")
     print(f"F1 score: {f1[1].item()}")
 
+    metric = EvaluationMetric(
+        tp,
+        fn,
+        fp,
+        tn,
+        accuracy,
+        precission,
+        recall,
+        f1
+    )
+    ModelStorage.add_test_results(metric.payload)
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('model_name')
+    parser.add_argument('save_name')
     parser.add_argument(
-        "threshold_cancer",
+        "--threshold_cancer",
         default=0.5,
         type=float,
         help='choose threshold for predictions, smaller predictions'
         ' will be treated as negative, resst as positive'
     )
     parser.add_argument(
-        "threshold_cyst",
+        "--threshold_cyst",
         default=0.5,
         type=float,
         help='choose threshold for predictions, smaller predictions'

@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from models.EfficientNetClassifier import EfficientNetClassifier
+from src.models.ModelStorage import create_save
 from data.kits_dataset import Kits23Dataset
 from pipelines.split_cases import split_cases
 
@@ -30,7 +31,7 @@ def train_model(
     model: nn.Module,
     learning_rate: float = 0.001,
     epochs: int = 5
-):
+) -> tuple[list, list]:
     device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
     print(device)
     model.to(device)
@@ -104,10 +105,13 @@ def train_model(
             new learning rate: {current_lr}"""
         )
 
+    return train_losses, validation_losses
+
 
 def main(
     file_name: str,
     model_name: str,
+    save_name: str,
     learning_rate: float,
     epochs: int
 ) -> None:
@@ -160,7 +164,7 @@ def main(
     # print(f"test model: {model(l_image)}, \nshape:{model(l_image).shape}")
     # -------------------------------
 
-    train_model(
+    train_loss, validation_loss = train_model(
         train_loader,
         validation_loader,
         model,
@@ -168,18 +172,16 @@ def main(
         epochs
     )
 
-    # save model
     model.train_data_path = file_path
-    model_path = Path(os.getenv("TRAINED_MODELS"))
-    model_path.mkdir(
-        parents=True,
-        exist_ok=True
-    )
     now = datetime.now()
     now = now.strftime("%d-%m-%Y_%H-%M-%S")
-    model_path = model_path / f"{model_name}_{now}.model"
-    with Path.open(model_path, 'wb') as fh:
-        torch.save(model, fh)
+    model.train_time = now
+    create_save(
+        save_name,
+        model,
+        train_loss,
+        validation_loss
+    )
 
 
 if __name__ == '__main__':
@@ -199,6 +201,11 @@ if __name__ == '__main__':
         help=f'choose one from available models: {MODELS.keys()}'
     )
     parser.add_argument(
+        'save_name',
+        type=str,
+        help='choose a name to save model'
+    )
+    parser.add_argument(
         '--lr',
         type=float,
         default=0.001,
@@ -211,4 +218,4 @@ if __name__ == '__main__':
         help='specify ammount of training epochs'
     )
     args = parser.parse_args()
-    main(args.sets_name, args.model_name, args.lr, args.epochs)
+    main(args.sets_name, args.model_name, args.save_name, args.lr, args.epochs)
