@@ -35,6 +35,7 @@ class ModelTrainer:
         if not log:
             os.environ["TQDM_DISABLE"] = "1"
         try:
+            model.to(self.device)
             tester = ModelTester()
             train_losses = []
             validation_losses = []
@@ -60,9 +61,9 @@ class ModelTrainer:
                     criterion=self.criterion
                 )
                 validation_loss = results.loss
-                validation_losses.append(self.validation_loss)
+                validation_losses.append(validation_loss)
 
-                self.scheduler.step(self.validation_loss)
+                self.scheduler.step(validation_loss)
                 current_lr = self.optimizer.param_groups[0]['lr']
 
                 if log:
@@ -72,7 +73,7 @@ class ModelTrainer:
                         new learning rate: {current_lr}"""
                     )
                     results.print_results()
-                statistics.appen(results)
+                statistics.append(results)
 
             return {
                 'train losses': train_losses,

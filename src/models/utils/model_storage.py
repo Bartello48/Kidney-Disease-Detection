@@ -13,8 +13,7 @@ class ModelStorage:
     def create_save(
         save_name: str,
         model: BaseModel,
-        training_loss: list,
-        validation_loss: list
+        training_stats: dict
     ) -> None:
         load_dotenv(override=True)
         models_folder = Path(os.getenv("TRAINED_MODELS"))
@@ -38,8 +37,7 @@ class ModelStorage:
         payload['data_path'] = data_path
         payload['train_data_file'] = model.train_data_path
         payload['adaptive_lr'] = True
-        payload['training_loss'] = training_loss
-        payload['validation_loss'] = validation_loss
+        payload['training'] = training_stats
         payload['tests'] = None
 
         ModelStorage.save_data(payload)

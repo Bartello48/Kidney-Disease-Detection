@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-class BaseModel(nn.Modudle):
+class BaseModel(nn.Module):
     model_name = 'default'
     model_path = None
     train_data_path = None

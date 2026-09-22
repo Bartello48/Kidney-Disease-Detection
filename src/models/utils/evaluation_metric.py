@@ -13,8 +13,8 @@ class EvaluationMetric:
         now = now.strftime("%d-%m-%Y_%H-%M-%S")
         self.timestamp = now
 
-        self.tp = tp,
-        self.fn = fn,
+        self.tp = tp
+        self.fn = fn
         self.fp = fp
         self.tn = tn
         self.threshold_cancer = threshold_cancer

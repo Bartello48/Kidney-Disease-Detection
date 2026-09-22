@@ -14,7 +14,7 @@ import torchvision
 from dotenv import load_dotenv
 from models.utils.model_trainer import ModelTrainer
 from models.EfficientNetClassifier import EfficientNetClassifier
-from src.models.utils.model_storage import ModelStorage
+from models.utils.model_storage import ModelStorage
 from data.kits_dataset import Kits23Dataset
 from pipelines.split_cases import split_cases
 
@@ -156,10 +156,8 @@ def main(
     ModelStorage.create_save(
         save_name,
         model,
-        training_data[0],  # train loss
-        training_data[1],  # validation loss
-        training_data[2],  # validation test scores
-        training_data[3]  # training parameters
+        training_data
+        # train loss, validation loss, validation test scores, training parameters
     )
 
 
