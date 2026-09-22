@@ -12,10 +12,9 @@ from torch.utils.data import DataLoader
 import torchvision
 
 from dotenv import load_dotenv
-from tqdm import tqdm
-
+from models.utils.model_trainer import ModelTrainer
 from models.EfficientNetClassifier import EfficientNetClassifier
-from src.models.ModelStorage import create_save
+from src.models.utils.model_storage import ModelStorage
 from data.kits_dataset import Kits23Dataset
 from pipelines.split_cases import split_cases
 
@@ -32,10 +31,6 @@ def train_model(
     learning_rate: float = 0.001,
     epochs: int = 5
 ) -> tuple[list, list]:
-    device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
-    print(device)
-    model.to(device)
-
     criterion = nn.BCEWithLogitsLoss()
     # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     optimizer = optim.Adam(
@@ -58,54 +53,35 @@ def train_model(
         min_lr=1e-7
     )
 
-    # test criterion
-    # image, label = next(iter(train_loader))
-    # image, label = image.to(device), label.to(device)
-    # print(f"image shape: {image.shape}")
-    # print(f"labels: {label}, labels shape: {label.shape}")
-    # output = model(image)
-    # print(f"model output: {output}, shape: {output.shape}")
-    # print(criterion(output, label))
-    # -------------------
+    trainer = ModelTrainer(
+        train_loader,
+        validation_loader,
+        criterion,
+        optimizer,
+        scheduler
+    )
 
-    train_losses, validation_losses = [], []
+    results = trainer.train_model(
+        model,
+        epochs,
+        log=True
+    )
 
-    for epoch in range(epochs):
-        model.train()
-        running_loss = 0.0
-        for images, labels in tqdm(train_loader, 'train loop'):
-            images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item() * images.size(0)
-        train_loss = running_loss / len(train_loader.dataset)
-        train_losses.append(train_loss)
+    results['parameters'] = {
+        'epochs': epochs,
+        'learning rate': learning_rate,
+        'adaptive lr': True,
+        'criterion': "BCEWithLogitsLoss",
+        'optimizer': "Adam",
+        'scheduler': {
+            'mode': 'min',
+            'factor': 0.5,
+            'patience': 1,
+            'min_lr': 1e-7
+        }
+    }
 
-        model.eval()
-        running_loss = 0.0
-        with torch.no_grad():
-            for images, labels in tqdm(validation_loader, 'validation loop'):
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                loss = criterion(outputs, labels)
-                running_loss += loss.item() * images.size(0)
-        validation_loss = running_loss / len(validation_loader.dataset)
-        validation_losses.append(validation_loss)
-
-        scheduler.step(validation_loss)
-        current_lr = optimizer.param_groups[0]['lr']
-
-        # TEMPORARY
-        print(
-            f"""Epoch {epoch + 1}|{epochs} - train loss: {train_loss},
-            validation loss: {validation_loss}
-            new learning rate: {current_lr}"""
-        )
-
-    return train_losses, validation_losses
+    return results
 
 
 def main(
@@ -142,7 +118,8 @@ def main(
     validation_set = Kits23Dataset(split['validation_slices'])
 
     # test dataset
-    # print(f'dataset shape image: {train_set[1000][0].shape}, labels: {train_set[1000][1].shape}')
+    # print(f'dataset shape image: {train_set[1000][0].shape},
+    # labels: {train_set[1000][1].shape}')
     # ----------------------
 
     train_loader = DataLoader(
@@ -164,7 +141,7 @@ def main(
     # print(f"test model: {model(l_image)}, \nshape:{model(l_image).shape}")
     # -------------------------------
 
-    train_loss, validation_loss = train_model(
+    training_data = train_model(
         train_loader,
         validation_loader,
         model,
@@ -176,11 +153,13 @@ def main(
     now = datetime.now()
     now = now.strftime("%d-%m-%Y_%H-%M-%S")
     model.train_time = now
-    create_save(
+    ModelStorage.create_save(
         save_name,
         model,
-        train_loss,
-        validation_loss
+        training_data[0],  # train loss
+        training_data[1],  # validation loss
+        training_data[2],  # validation test scores
+        training_data[3]  # training parameters
     )
 
 
