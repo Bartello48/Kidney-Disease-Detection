@@ -5,17 +5,20 @@ from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
 
 class EfficientNetClassifier(BaseModel):
-    def __init__(self, num_classes: int = 2) -> None:
+    def __init__(self, num_classes: int = 2, pretrained: bool = True) -> None:
         super(EfficientNetClassifier, self).__init__()
 
         self.model_name = 'efficientnet_b0'
         self.model_path = None
         self.train_data_path = None
-
-        self._model = efficientnet_b0(
-            weights=EfficientNet_B0_Weights.DEFAULT
-        )
-
+        self.pretrained = pretrained
+        self._mode = None
+        if pretrained:
+            self._model = efficientnet_b0(
+                weights=EfficientNet_B0_Weights.DEFAULT
+            )
+        else:
+            self._model = efficientnet_b0()
         # change 3-channel RGB to 1-channel grayscale
         old_conv = self._model.features[0][0]
         new_conv = nn.Conv2d(
@@ -26,10 +29,11 @@ class EfficientNetClassifier(BaseModel):
             padding=old_conv.padding,
             bias=False
         )
-        with torch.no_grad():
-            new_conv.weight.copy_(
-                old_conv.weight.mean(dim=1, keepdim=True)
-            )
+        if pretrained:
+            with torch.no_grad():
+                new_conv.weight.copy_(
+                    old_conv.weight.mean(dim=1, keepdim=True)
+                )
         self._model.features[0][0] = new_conv
 
         # replace classifier with 2-classes classifier

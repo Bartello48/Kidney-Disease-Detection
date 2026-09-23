@@ -29,8 +29,7 @@ class ModelTester:
         criterion: torch.nn.Module = None,
     ) -> dict:
         calculate_loss = True
-        if criterion is None:
-            calculate_loss = False
+        calculate_loss = criterion is not None
 
         model.to(device)
         model.eval()

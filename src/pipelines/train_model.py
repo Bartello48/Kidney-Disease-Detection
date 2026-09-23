@@ -31,17 +31,24 @@ def train_model(
     learning_rate: float = 0.001,
     epochs: int = 5
 ) -> tuple[list, list]:
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss(
+        pos_weight=torch.tensor(
+            [1.56, 6.30],  # cancer: 9021 / 5793 = 1.56, cyst: 13239 / 2103 = 6.30
+            dtype=torch.float32,
+        )
+    )
     # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    features_lr = learning_rate
+    classifier_lr = learning_rate / 10
     optimizer = optim.Adam(
         [
             {
                 "params": model._model.features.parameters(),
-                "lr": learning_rate
+                "lr": features_lr
             },
             {
                 "params": model._model.classifier.parameters(),
-                "lr": learning_rate / 10
+                "lr": classifier_lr
             }
         ]
     )
@@ -71,8 +78,15 @@ def train_model(
         'epochs': epochs,
         'learning rate': learning_rate,
         'adaptive lr': True,
-        'criterion': "BCEWithLogitsLoss",
-        'optimizer': "Adam",
+        'pretrained': model.pretrained,
+        'criterion': {
+            "name": "BCEWithLogitsLoss",
+        },
+        'optimizer': {
+            "name": "Adam",
+            "features_lr": features_lr,
+            "classifier_lr": classifier_lr
+        },
         'scheduler': {
             'mode': 'min',
             'factor': 0.5,
@@ -156,8 +170,7 @@ def main(
     ModelStorage.create_save(
         save_name,
         model,
-        training_data
-        # train loss, validation loss, validation test scores, training parameters
+        training_data  # train loss, validation loss, validation scores, training params
     )
 
 
