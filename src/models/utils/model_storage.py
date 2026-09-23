@@ -34,8 +34,8 @@ class ModelStorage:
 
         data_path = model_folder / "data.json"
         payload = dict()
-        payload['data_path'] = data_path
-        payload['train_data_file'] = model.train_data_path
+        payload['data_path'] = str(data_path)
+        payload['train_data_file'] = str(model.train_data_path)
         payload['adaptive_lr'] = True
         payload['training'] = training_stats
         payload['tests'] = []

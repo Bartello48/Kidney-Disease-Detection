@@ -163,7 +163,7 @@ def main(
         epochs
     )
 
-    model.train_data_path = file_path
+    model.train_data_path = file_path  # important, cant put Path object into json
     now = datetime.now()
     now = now.strftime("%d-%m-%Y_%H-%M-%S")
     model.train_time = now
