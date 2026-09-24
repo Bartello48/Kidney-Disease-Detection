@@ -81,6 +81,7 @@ def train_model(
         'pretrained': model.pretrained,
         'criterion': {
             "name": "BCEWithLogitsLoss",
+            "pos_weight": [1.56, 6.30]
         },
         'optimizer': {
             "name": "Adam",
@@ -103,7 +104,8 @@ def main(
     model_name: str,
     save_name: str,
     learning_rate: float,
-    epochs: int
+    epochs: int,
+    pretrained: bool
 ) -> None:
     load_dotenv(override=True)
     data_path = Path(str(os.getenv("PREPROCESSED_PATH")))
@@ -124,7 +126,7 @@ def main(
     if not split:
         raise AttributeError("No split generated / found")
 
-    model = MODELS.get(model_name)(num_classes=2)
+    model = MODELS.get(model_name)(num_classes=2, pretrained=pretrained)
     if model is None:
         raise ValueError(f"No model matching provieded name: {model_name}")
 
@@ -207,5 +209,17 @@ if __name__ == '__main__':
         default=5,
         help='specify ammount of training epochs'
     )
+    parser.add_argument(
+        '--pretrained',
+        action='store_true',
+        help='use pretrained weights',
+    )
     args = parser.parse_args()
-    main(args.sets_name, args.model_name, args.save_name, args.lr, args.epochs)
+    main(
+        args.sets_name,
+        args.model_name,
+        args.save_name,
+        args.lr,
+        args.epochs,
+        args.pretrained
+    )

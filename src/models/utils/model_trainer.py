@@ -87,7 +87,7 @@ class ModelTrainer:
                         new learning rate: {current_lr}"""
                     )
                     results.print_results()
-                statistics.append(results)
+                statistics.append(results.payload)
 
             return {
                 'train losses': train_losses,

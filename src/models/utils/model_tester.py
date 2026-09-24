@@ -27,7 +27,7 @@ class ModelTester:
         threshold_cyst: float = 0.5,
         log: bool = True,
         criterion: torch.nn.Module = None,
-    ) -> dict:
+    ) -> EvaluationMetric:
         calculate_loss = True
         calculate_loss = criterion is not None
 

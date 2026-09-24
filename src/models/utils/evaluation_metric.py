@@ -36,7 +36,7 @@ class EvaluationMetric:
     @property
     def payload(self):
         payload = {
-            'timestamp': self.now,
+            'timestamp': self.timestamp,
             'threshold_cancer': self.threshold_cancer,
             'threshold_cyst': self.threshold_cyst,
             'cancer': {
