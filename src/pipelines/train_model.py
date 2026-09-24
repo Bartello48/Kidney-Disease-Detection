@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 import torchvision
 from dotenv import load_dotenv
 
-import models
+from models import EfficientNetClassifier, EfficientNetClassifierPretrained
 from models.utils.model_trainer import ModelTrainer
 from models.utils.model_storage import ModelStorage
 from data.training_parameters import TrainingParameters
@@ -21,8 +21,8 @@ from pipelines.split_cases import split_cases
 
 
 MODELS = {
-    'efficientnet': models.EfficientNetClassifier,
-    'efficientnet_pretrained': models.EfficientNetClassifierPretrained,
+    'efficientnet': EfficientNetClassifier,
+    'efficientnet_pretrained': EfficientNetClassifierPretrained
 }
 
 
@@ -72,8 +72,8 @@ def train_model(
 
     # load model
     model = MODELS.get(model_name)(
-        num_classes=2,
         train_data_path=file_path,
+        num_classes=2
     )
     if model is None:
         raise ValueError(f"No model matching provieded name: {model_name}")

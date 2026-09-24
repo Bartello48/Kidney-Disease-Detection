@@ -89,6 +89,8 @@ class ModelStorage:
     def add_test_results(save_name: str, results: dict) -> None:
         """
         After running tests, wrap results into a dict
+        results should contain:
+        train loss: list, validation loss: list, validation scores, training params
         """
         data = ModelStorage.load_data(save_name)
         data['tests'].append(results)

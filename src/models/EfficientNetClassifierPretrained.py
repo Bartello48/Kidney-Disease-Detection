@@ -6,19 +6,20 @@ from models.BaseModel import BaseModel
 from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
 
-class EfficientNetClassifier(BaseModel):
+class EfficientNetClassifierPretrained(BaseModel):
     def __init__(
         self,
         train_data_path: Path,
         num_classes: int = 2
     ) -> None:
         super(
-            EfficientNetClassifier,
+            EfficientNetClassifierPretrained,
             self,
+        ).__init__(
             'efficientnet_b0',
             train_data_path,
             True
-        ).__init__()
+        )
 
         self.model_name = 'efficientnet_b0'
         self.model_path = None

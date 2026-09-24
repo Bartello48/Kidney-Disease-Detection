@@ -10,10 +10,11 @@ class EfficientNetClassifier(BaseModel):
         super(
             EfficientNetClassifier,
             self,
+        ).__init__(
             'efficientnet_b0',
             train_data_path,
             False
-        ).__init__()
+        )
 
         self.model_name = 'efficientnet_b0'
         self.model_path = None
