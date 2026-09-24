@@ -1,27 +1,32 @@
 from pathlib import Path
 
+import torch
 import torch.nn as nn
 from models.BaseModel import BaseModel
-from torchvision.models import efficientnet_b0
+from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
 
 class EfficientNetClassifier(BaseModel):
-    def __init__(self, train_data_path: Path, num_classes: int = 2) -> None:
+    def __init__(
+        self,
+        train_data_path: Path,
+        num_classes: int = 2
+    ) -> None:
         super(
             EfficientNetClassifier,
             self,
             'efficientnet_b0',
             train_data_path,
-            False
+            True
         ).__init__()
 
         self.model_name = 'efficientnet_b0'
         self.model_path = None
         self.train_data_path = None
-        self.pretrained = False
-        self._mode = None
-
-        self._model = efficientnet_b0()
+        self.pretrained = True
+        self._model = efficientnet_b0(
+            weights=EfficientNet_B0_Weights.DEFAULT
+        )
         # change 3-channel RGB to 1-channel grayscale
         old_conv = self._model.features[0][0]
         new_conv = nn.Conv2d(
@@ -33,6 +38,10 @@ class EfficientNetClassifier(BaseModel):
             bias=False
         )
 
+        with torch.no_grad():
+            new_conv.weight.copy_(
+                old_conv.weight.mean(dim=1, keepdim=True)
+            )
         self._model.features[0][0] = new_conv
 
         # replace classifier with 2-classes classifier

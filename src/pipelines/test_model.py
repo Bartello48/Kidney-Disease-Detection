@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from src.models.utils.model_storage import ModelStorage
+from models.utils.model_storage import ModelStorage
 from models.utils.model_tester import ModelTester
 
 
@@ -17,7 +17,7 @@ def test_model(
         log=True
     )
 
-    ModelStorage.add_test_results(results)
+    ModelStorage.add_test_results(save_name, results.payload)
 
 
 if __name__ == '__main__':
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     test_model(
-        str(args.model_name),
+        str(args.save_name),
         float(args.threshold_cancer),
         float(args.threshold_cyst)
     )

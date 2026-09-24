@@ -95,7 +95,7 @@ class ModelTester:
         device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
         model = ModelStorage.load_model(save_name)
 
-        split_path = Path(model.train_data_path)
+        split_path = model.train_data_path
         with Path.open(split_path, 'r') as fh:
             split = json.load(fh)
         test_set = Kits23Dataset(split['test_slices'])

@@ -37,7 +37,7 @@ class ModelStorage:
         payload['data_path'] = str(data_path)
         payload['train_data_file'] = str(model.train_data_path)
         payload['adaptive_lr'] = True
-        payload['training'] = training_stats
+        payload['training'] = [training_stats]
         payload['tests'] = []
 
         ModelStorage.save_data(payload)
@@ -72,7 +72,7 @@ class ModelStorage:
         data_path = save_path / 'data.json'
 
         with Path.open(data_path, 'r') as fh:
-            data = json.loads(fh)
+            data = json.load(fh)
 
         return data
 
@@ -92,4 +92,10 @@ class ModelStorage:
         """
         data = ModelStorage.load_data(save_name)
         data['tests'].append(results)
+        ModelStorage.save_data(data)
+
+    @staticmethod
+    def add_training(save_name: str, training_stats: dict) -> None:
+        data = ModelStorage.load_data(save_name)
+        data['training'].append(training_stats)
         ModelStorage.save_data(data)

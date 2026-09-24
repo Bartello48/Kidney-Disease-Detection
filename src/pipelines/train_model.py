@@ -10,103 +10,33 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import torchvision
-
 from dotenv import load_dotenv
+
+import models
 from models.utils.model_trainer import ModelTrainer
-from models.EfficientNetClassifier import EfficientNetClassifier
 from models.utils.model_storage import ModelStorage
+from data.training_parameters import TrainingParameters
 from data.kits_dataset import Kits23Dataset
 from pipelines.split_cases import split_cases
 
 
 MODELS = {
-    'efficientnet': EfficientNetClassifier
+    'efficientnet': models.EfficientNetClassifier,
+    'efficientnet_pretrained': models.EfficientNetClassifierPretrained,
 }
 
 
 def train_model(
-    train_loader: DataLoader,
-    validation_loader: DataLoader,
-    model: nn.Module,
-    learning_rate: float = 0.001,
-    epochs: int = 5
-) -> tuple[list, list]:
-    criterion = nn.BCEWithLogitsLoss(
-        pos_weight=torch.tensor(
-            [1.56, 6.30],  # cancer: 9021 / 5793 = 1.56, cyst: 13239 / 2103 = 6.30
-            dtype=torch.float32,
-        )
-    )
-    # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    features_lr = learning_rate
-    classifier_lr = learning_rate / 10
-    optimizer = optim.Adam(
-        [
-            {
-                "params": model._model.features.parameters(),
-                "lr": features_lr
-            },
-            {
-                "params": model._model.classifier.parameters(),
-                "lr": classifier_lr
-            }
-        ]
-    )
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode='min',
-        factor=0.5,
-        patience=1,
-        min_lr=1e-7
-    )
-
-    trainer = ModelTrainer(
-        train_loader,
-        validation_loader,
-        criterion,
-        optimizer,
-        scheduler
-    )
-
-    results = trainer.train_model(
-        model,
-        epochs,
-        log=True
-    )
-
-    results['parameters'] = {
-        'epochs': epochs,
-        'learning rate': learning_rate,
-        'adaptive lr': True,
-        'pretrained': model.pretrained,
-        'criterion': {
-            "name": "BCEWithLogitsLoss",
-            "pos_weight": [1.56, 6.30]
-        },
-        'optimizer': {
-            "name": "Adam",
-            "features_lr": features_lr,
-            "classifier_lr": classifier_lr
-        },
-        'scheduler': {
-            'mode': 'min',
-            'factor': 0.5,
-            'patience': 1,
-            'min_lr': 1e-7
-        }
-    }
-
-    return results
-
-
-def main(
     file_name: str,
     model_name: str,
     save_name: str,
     learning_rate: float,
     epochs: int,
-    pretrained: bool
 ) -> None:
+    """
+    File path
+    """
+    # load dataset
     load_dotenv(override=True)
     data_path = Path(str(os.getenv("PREPROCESSED_PATH")))
     file_path = data_path / file_name
@@ -126,17 +56,8 @@ def main(
     if not split:
         raise AttributeError("No split generated / found")
 
-    model = MODELS.get(model_name)(num_classes=2, pretrained=pretrained)
-    if model is None:
-        raise ValueError(f"No model matching provieded name: {model_name}")
-
     train_set = Kits23Dataset(split['train_slices'])
     validation_set = Kits23Dataset(split['validation_slices'])
-
-    # test dataset
-    # print(f'dataset shape image: {train_set[1000][0].shape},
-    # labels: {train_set[1000][1].shape}')
-    # ----------------------
 
     train_loader = DataLoader(
         train_set,
@@ -149,30 +70,79 @@ def main(
         shuffle=False
     )
 
-    # test loader
-    # l_image, l_label = next(iter(train_loader))
-    # print(f"loader shape image: {l_image.shape}, label: {l_label.shape}")
-    # print(f"loader labels: {l_label}")
-    # test model
-    # print(f"test model: {model(l_image)}, \nshape:{model(l_image).shape}")
-    # -------------------------------
+    # load model
+    model = MODELS.get(model_name)(
+        num_classes=2,
+        train_data_path=file_path,
+    )
+    if model is None:
+        raise ValueError(f"No model matching provieded name: {model_name}")
 
-    training_data = train_model(
-        train_loader,
-        validation_loader,
-        model,
-        learning_rate,
-        epochs
+    # prepare training parameters
+    criterion = nn.BCEWithLogitsLoss(
+        pos_weight=torch.tensor(
+            [1.56, 6.30],  # cancer: 9021 / 5793 = 1.56, cyst: 13239 / 2103 = 6.30
+            dtype=torch.float32,
+        )
     )
 
-    model.train_data_path = file_path  # important, cant put Path object into json
-    now = datetime.now()
-    now = now.strftime("%d-%m-%Y_%H-%M-%S")
+    features_lr = learning_rate
+    classifier_lr = learning_rate / 10
+    optimizer = optim.Adam(
+        [
+            {
+                "params": model._model.features.parameters(),
+                "lr": features_lr
+            },
+            {
+                "params": model._model.classifier.parameters(),
+                "lr": classifier_lr
+            }
+        ]
+    )
+
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='min',
+        factor=0.5,
+        patience=1,
+        min_lr=1e-7
+    )
+    model.criterion = criterion
+    model.optimizer = optimizer
+    model.scheduler = scheduler
+
+    # train model
+    trainer = ModelTrainer(
+        train_loader,
+        validation_loader,
+        criterion,
+        optimizer,
+        scheduler
+    )
+
+    results = trainer.train_model(
+        model,
+        epochs,
+        log=True
+    )
+
+    results['parameters'] = TrainingParameters.get_training_parameters(
+        epochs,
+        learning_rate,
+        True,
+        model.pretrained,
+        criterion,
+        optimizer,
+        scheduler
+    )
+
+    now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
     model.train_time = now
     ModelStorage.create_save(
         save_name,
         model,
-        training_data  # train loss, validation loss, validation scores, training params
+        results  # train loss, validation loss, validation scores, training params
     )
 
 
@@ -209,17 +179,11 @@ if __name__ == '__main__':
         default=5,
         help='specify ammount of training epochs'
     )
-    parser.add_argument(
-        '--pretrained',
-        action='store_true',
-        help='use pretrained weights',
-    )
     args = parser.parse_args()
-    main(
+    train_model(
         args.sets_name,
         args.model_name,
         args.save_name,
         args.lr,
         args.epochs,
-        args.pretrained
     )
