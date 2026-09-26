@@ -60,6 +60,7 @@ class ModelTester:
     ) -> EvaluationMetric:
         loss, results = prediction
         predictions = torch.stack([p for p, _ in results])
+        predictions = torch.sigmoid(predictions)
         labels = torch.stack([y for _, y in results])
 
         thresholds = torch.tensor(
@@ -164,7 +165,8 @@ class ModelTester:
             device,
             test_loader
         )
-        predictions = torch.stack([p for p, _ in results]).cpu().numpy()
+        predictions = torch.stack([p for p, _ in results])
+        predictions = torch.sigmoid(predictions).cpu().numpy()
         labels = torch.stack([y for _, y in results]).cpu().numpy()
 
         for class_idx, class_name in enumerate(["cancer", "cyst"]):
