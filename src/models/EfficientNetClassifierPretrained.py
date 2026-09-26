@@ -21,10 +21,7 @@ class EfficientNetClassifierPretrained(BaseModel):
             True
         )
 
-        self.model_name = 'efficientnet_b0'
         self.model_path = None
-        self.train_data_path = None
-        self.pretrained = True
         self._model = efficientnet_b0(
             weights=EfficientNet_B0_Weights.DEFAULT
         )

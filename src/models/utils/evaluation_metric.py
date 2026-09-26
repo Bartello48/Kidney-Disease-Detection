@@ -27,11 +27,16 @@ class EvaluationMetric:
             / (self.precission + self.recall).clamp_min(1e-8)
         )
         self.accuracy = (tp + tn).float() / (tp + tn + fp + fn).clamp_min(1)
+        self.fpr = fp.float() / (fp + tn).clamp_min(1)
 
         self.loss = loss
         self.loss_aplicable = True
         if loss is None:
             self.loss_aplicable = False
+
+    @property
+    def false_positive_rate(self):
+        return self.fpr
 
     @property
     def payload(self):
@@ -47,6 +52,7 @@ class EvaluationMetric:
                 'accuracy': self.accuracy[0].item(),
                 'precission': self.precission[0].item(),
                 'recall': self.recall[0].item(),
+                'false_positive_rate': self.fpr[0].item(),
                 'f1': self.f1[0].item()
             },
             'cyst': {
@@ -57,6 +63,7 @@ class EvaluationMetric:
                 'accuracy': self.accuracy[1].item(),
                 'precission': self.precission[1].item(),
                 'recall': self.recall[1].item(),
+                'false_positive_rate': self.fpr[1].item(),
                 'f1': self.f1[1].item()
             }
         }
@@ -77,6 +84,7 @@ class EvaluationMetric:
         print(f"Accuracy: {self.accuracy[0].item()}")
         print(f"Precission: {self.precission[0].item()}")
         print(f"Recall: {self.recall[0].item()}")
+        print(f"False Positive Rate: {self.fpr[0].item()}")
         print(f"F1 score: {self.f1[0].item()}")
         # cyst
         print("--- CYST ---")
@@ -85,4 +93,5 @@ class EvaluationMetric:
         print(f"Accuracy: {self.accuracy[1].item()}")
         print(f"Precission: {self.precission[1].item()}")
         print(f"Recall: {self.recall[1].item()}")
+        print(f"False Positive Rate: {self.fpr[1].item()}")
         print(f"F1 score: {self.f1[1].item()}")

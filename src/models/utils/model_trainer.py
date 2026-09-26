@@ -37,7 +37,6 @@ class ModelTrainer:
             os.environ["TQDM_DISABLE"] = "1"
         try:
             model.to(self.device)
-            tester = ModelTester()
             train_losses = []
             validation_losses = []
             statistics = []
@@ -67,7 +66,7 @@ class ModelTrainer:
                 train_loss = running_loss / len(self.train_loader.dataset)
                 train_losses.append(train_loss)
 
-                results = tester.test_model(
+                results = ModelTester.test_model(
                     model,
                     self.validation_loader,
                     self.device,

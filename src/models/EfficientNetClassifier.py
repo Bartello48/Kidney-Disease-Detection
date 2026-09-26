@@ -16,12 +16,7 @@ class EfficientNetClassifier(BaseModel):
             False
         )
 
-        self.model_name = 'efficientnet_b0'
         self.model_path = None
-        self.train_data_path = None
-        self.pretrained = False
-        self._mode = None
-
         self._model = efficientnet_b0()
         # change 3-channel RGB to 1-channel grayscale
         old_conv = self._model.features[0][0]
