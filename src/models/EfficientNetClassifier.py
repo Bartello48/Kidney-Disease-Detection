@@ -1,12 +1,18 @@
 from pathlib import Path
 
+import torch
 import torch.nn as nn
+
 from models.BaseModel import BaseModel
 from torchvision.models import efficientnet_b0
 
 
 class EfficientNetClassifier(BaseModel):
-    def __init__(self, train_data_path: Path, num_classes: int = 2) -> None:
+    def __init__(
+        self,
+        train_data_path: Path,
+        num_classes: int = 2
+    ) -> None:
         super(
             EfficientNetClassifier,
             self,
@@ -28,7 +34,10 @@ class EfficientNetClassifier(BaseModel):
             padding=old_conv.padding,
             bias=False
         )
-
+        with torch.no_grad():
+            new_conv.weight.copy_(
+                old_conv.weight.mean(dim=1, keepdim=True)
+            )
         self._model.features[0][0] = new_conv
 
         # replace classifier with 2-classes classifier

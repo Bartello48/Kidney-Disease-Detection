@@ -13,6 +13,7 @@ import torchvision
 from dotenv import load_dotenv
 
 from models import EfficientNetClassifier, EfficientNetClassifierPretrained
+from models import ResNetClassifier, ResNetClassifierPretrained
 from models.utils.model_trainer import ModelTrainer
 from models.utils.model_storage import ModelStorage
 from data.training_parameters import TrainingParameters
@@ -22,7 +23,9 @@ from pipelines.split_cases import split_cases
 
 MODELS = {
     'efficientnet': EfficientNetClassifier,
-    'efficientnet_pretrained': EfficientNetClassifierPretrained
+    'efficientnet_pretrained': EfficientNetClassifierPretrained,
+    'resnet': ResNetClassifier,
+    'resnet_pretrained': ResNetClassifierPretrained
 }
 
 
