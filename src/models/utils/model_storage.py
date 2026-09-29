@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from models.BaseModel import BaseModel
+from src.models.BaseModel import BaseModel
 
 
 class ModelStorage:

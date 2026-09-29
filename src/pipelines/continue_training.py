@@ -6,10 +6,10 @@ from argparse import ArgumentParser
 
 from torch.utils.data import DataLoader
 
-from data.training_parameters import TrainingParameters
-from data.kits_dataset import Kits23Dataset
-from models.utils.model_trainer import ModelTrainer
-from models.utils.model_storage import ModelStorage
+from src.data.training_parameters import TrainingParameters
+from src.data.kits_dataset import Kits23Dataset
+from src.models.utils.model_trainer import ModelTrainer
+from src.models.utils.model_storage import ModelStorage
 
 
 def continue_training(save_name: str, learning_rate: float, epochs: int):

@@ -3,14 +3,14 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from models.BaseModel import BaseModel
+from src.models.BaseModel import BaseModel
 from torchvision.models import resnet50, ResNet50_Weights
 
 
-class ResNetClassifier(BaseModel):
+class ResNetClassifierPretrained(BaseModel):
     def __init__(self, train_data_path: Path, num_classes: int = 2) -> None:
         super(
-            ResNetClassifier,
+            ResNetClassifierPretrained,
             self,
         ).__init__(
             'resnet_50',

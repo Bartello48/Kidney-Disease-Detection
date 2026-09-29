@@ -1,0 +1,24 @@
+criterion:
+  kwargs:
+    pos_weight:
+    - 1.56
+    - 6.3
+  name: BCEWithLogitsLoss
+dataset: first-split.json
+epochs: 5
+learning rate: 0.0001
+model: efficientnet
+optimizer:
+  kwargs: {}
+  name: Adam
+scheduler:
+  kwargs:
+    factor: 0.5
+    min_lr: 1.0e-07
+    mode: min
+    patience: 1
+  name: ReduceLROnPlateau
+seed: 2187
+test_batch_size: 16
+train_batch_size: 16
+validation_batch_size: 16

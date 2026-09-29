@@ -11,10 +11,10 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve, auc
 from matplotlib import pyplot as plt
 
-from data.kits_dataset import Kits23Dataset
-from models.BaseModel import BaseModel
-from models.utils.evaluation_metric import EvaluationMetric
-from models.utils.model_storage import ModelStorage
+from src.data.kits_dataset import Kits23Dataset
+from src.models.BaseModel import BaseModel
+from src.models.utils.evaluation_metric import EvaluationMetric
+from src.models.utils.model_storage import ModelStorage
 
 
 class ModelTester:

@@ -12,13 +12,13 @@ from torch.utils.data import DataLoader
 import torchvision
 from dotenv import load_dotenv
 
-from models import EfficientNetClassifier, EfficientNetClassifierPretrained
-from models import ResNetClassifier, ResNetClassifierPretrained
-from models.utils.model_trainer import ModelTrainer
-from models.utils.model_storage import ModelStorage
-from data.training_parameters import TrainingParameters
-from data.kits_dataset import Kits23Dataset
-from pipelines.split_cases import split_cases
+from src.models import EfficientNetClassifier, EfficientNetClassifierPretrained
+from src.models import ResNetClassifier, ResNetClassifierPretrained
+from src.models.utils.model_trainer import ModelTrainer
+from src.models.utils.model_storage import ModelStorage
+from src.data.training_parameters import TrainingParameters
+from src.data.kits_dataset import Kits23Dataset
+from src.pipelines.split_cases import split_cases
 
 
 MODELS = {

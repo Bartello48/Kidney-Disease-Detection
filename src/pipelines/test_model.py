@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
-from models.utils.model_storage import ModelStorage
-from models.utils.model_tester import ModelTester
+from src.models.utils.model_storage import ModelStorage
+from src.models.utils.model_tester import ModelTester
 
 
 def test_model(

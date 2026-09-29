@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from models.BaseModel import BaseModel
+from src.models.BaseModel import BaseModel
 from torchvision.models import efficientnet_b0
 
 
