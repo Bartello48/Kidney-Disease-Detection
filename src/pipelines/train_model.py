@@ -89,20 +89,21 @@ def train_model(
         )
     )
 
-    features_lr = learning_rate
-    classifier_lr = learning_rate / 10
-    optimizer = optim.Adam(
-        [
-            {
-                "params": model._model.features.parameters(),
-                "lr": features_lr
-            },
-            {
-                "params": model._model.classifier.parameters(),
-                "lr": classifier_lr
-            }
-        ]
-    )
+    # features_lr = learning_rate
+    # classifier_lr = learning_rate / 10
+    # optimizer = optim.Adam(
+    #     [
+    #         {
+    #             "params": model._model.features.parameters(),
+    #             "lr": features_lr
+    #         },
+    #         {
+    #             "params": model._model.classifier.parameters(),
+    #             "lr": classifier_lr
+    #         }
+    #     ]
+    # )
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,

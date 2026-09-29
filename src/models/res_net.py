@@ -36,10 +36,10 @@ class ResNetClassifier(BaseModel):
         self._model.conv1 = new_conv
 
         in_features = self._model.fc.in_features
-        self._model.classifier[1] = nn.Linear(
+        self._model.fc = nn.Linear(
             in_features,
             num_classes
         )
 
     def forward(self, x):
-        self._model(x)
+        return self._model(x)
