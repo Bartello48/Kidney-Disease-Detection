@@ -22,9 +22,10 @@ class TrainingParameters:
             "pos_weight": criterion.pos_weight.tolist()
         },
         'optimizer': {
-            "name": type(optimizer).__name__,
-            "features_lr": optimizer.param_groups[0]["lr"],
-            "classifier_lr": optimizer.param_groups[1]["lr"]
+            "name": type(optimizer).__name__
+            # TODO(bartel): make this fields not dependent onobject initialization
+            # "features_lr": optimizer.param_groups[0]["lr"],
+            # "classifier_lr": optimizer.param_groups[1]["lr"]
         },
         'scheduler': {
             'mode': scheduler.mode,

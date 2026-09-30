@@ -25,6 +25,7 @@ class ModelTester:
         test_data: DataLoader
     ) -> list:
         calculate_loss = model.criterion is not None
+        print(model.criterion)
         running_loss = 0.0
 
         model.to(device)
