@@ -17,6 +17,7 @@ wheels/
 # Results
 *.png
 trained_models/
+jobs/
 
 # Personal
 links

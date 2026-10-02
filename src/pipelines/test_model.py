@@ -14,13 +14,11 @@ def test_model(
         save_name,
         threshold_cancer,
         threshold_cyst,
-        log=True
+        log=True,
+        plot_curves=plot_curves
     )
 
     ModelStorage.add_test_results(save_name, results.payload)
-
-    if plot_curves:
-        ModelTester.plot_pr_roc(save_name)
 
 
 if __name__ == '__main__':

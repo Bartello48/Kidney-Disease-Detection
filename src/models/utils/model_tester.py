@@ -9,7 +9,8 @@ from sklearn.metrics import roc_curve, auc
 from matplotlib import pyplot as plt
 
 from src.models.BaseModel import BaseModel
-from src.models.utils.evaluation_metric import EvaluationMetric
+from src.models.utils import ModelStorage, EvaluationMetric
+from src.data.utils import get_data_loaders
 
 
 class ModelTester:
@@ -24,19 +25,20 @@ class ModelTester:
         running_loss = 0.0
 
         model.to(device)
-        criterion.to(device)
+        if calculate_loss:
+            criterion.to(device)
         model.eval()
 
         results = []
 
         with torch.no_grad():
-            for images, labels in tqdm(test_data):
+            for images, labels in tqdm(test_data, 'test model'):
                 images, labels = images.to(device), labels.to(device)
 
                 outputs = model(images)
 
                 if calculate_loss:
-                    loss = model.criterion(outputs, labels)
+                    loss = criterion(outputs, labels)
                     running_loss += loss.item() * images.size(0)
 
                 for output, label in zip(outputs, labels, strict=True):
@@ -91,13 +93,13 @@ class ModelTester:
     def test_model(
         model: BaseModel,
         test_data: DataLoader,
-        device,
+        device=None,
         criterion=None,
         threshold_cancer: float = 0.5,
         threshold_cyst: float = 0.5,
         log: bool = True,
         plot_curves: bool = False,
-        save_path: Path = None
+        save_name: str = None
     ) -> EvaluationMetric:
         if device is None:
             device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
@@ -119,47 +121,47 @@ class ModelTester:
             evaluation.print_results()
 
         if plot_curves:
-            ModelTester._plot_pr_roc(results[1], save_path)
+            ModelTester._plot_pr_roc(results[1], ModelStorage.get_save_path(save_name))
 
         return evaluation
 
-    # @staticmethod
-    # def get_test_data(split_path: Path) -> DataLoader:
-    #     with Path.open(split_path, 'r') as fh:
-    #         split = json.load(fh)
-    #         test_set = Kits23Dataset(split['test_slices'])
-    #         test_loader = DataLoader(
-    #             test_set,
-    #             batch_size=int(os.getenv("TEST_BATCH_SIZE")),
-    #             shuffle=False
-    #         )
-    #     return test_loader
+    @staticmethod
+    def test_model_memory(
+        save_name: str,
+        threshold_cancer: float = 0.5,
+        threshold_cyst: float = 0.5,
+        log: bool = True,
+        plot_curves: bool = False
+    ) -> EvaluationMetric:
+        model = ModelStorage.load_model(save_name)
+        config = ModelStorage.load_config(save_name)
+        _, _, test_loader = get_data_loaders(
+            config.dataset,
+            get_test_loader=True, test_batch_size=config.test_batch_size
+        )
 
-    # @staticmethod
-    # def test_model_memory(
-    #     save_name: str,
-    #     threshold_cancer: float = 0.5,
-    #     threshold_cyst: float = 0.5,
-    #     log: bool = True
-    # ) -> EvaluationMetric:
-    #     load_dotenv(override=True)
-    #     device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
-    #     model = ModelStorage.load_model(save_name)
-    #     model.to(device)
-    #     # test_loader = ModelTester.get_test_data(model.train_data_path)
-    #     test_loader = ModelTester.get_test_data(Path('/mnt/d/inz_data/preprocessed/first_split.json'))
-
-    #     return ModelTester.test_model(
-    #         model,
-    #         test_loader,
-    #         device,
-    #         threshold_cancer,
-    #         threshold_cyst,
-    #         log
-    #     )
+        return ModelTester.test_model(
+            model,
+            test_data=test_loader,
+            threshold_cancer=threshold_cancer,
+            threshold_cyst=threshold_cyst,
+            log=log,
+            plot_curves=plot_curves,
+            save_name=save_name
+        )
 
     @staticmethod
-    def _plot_pr_roc(results: list, save_path: Path) -> None:
+    def _get_image_save_path(save_path: Path, suffix: str) -> Path:
+        save_path = save_path / 'images'
+        path = save_path / f'{suffix}.png'
+        if path.exists():
+            counter = 1
+            while (save_path / f'{suffix}_{counter}.png').exists():
+                counter += 1
+        return (save_path / f'{suffix}_{counter}.png')
+
+    @staticmethod
+    def _plot_pr_roc(results: list, save_path: Path) -> None:  # ABSOLUTE SAVE PATH
         predictions = torch.stack([p for p, _ in results])
         predictions = torch.sigmoid(predictions).cpu().numpy()
         labels = torch.stack([y for _, y in results]).cpu().numpy()
@@ -186,7 +188,11 @@ class ModelTester:
             plt.title("Precision-Recall Curve")
             plt.legend()
             plt.grid()
-            plt.savefig(save_path / f"{class_name}_pr-auc")
+            path = ModelTester._get_image_save_path(
+                save_path,
+                f"{class_name}_pr-auc"
+            )
+            plt.savefig(path)
             plt.close()
 
             # ROC
@@ -213,7 +219,11 @@ class ModelTester:
             plt.title("ROC Curve")
             plt.legend()
             plt.grid()
-            plt.savefig(save_path / f"{class_name}_roc")
+            path = ModelTester._get_image_save_path(
+                save_path,
+                f"{class_name}_roc"
+            )
+            plt.savefig(path)
             plt.close()
 
             print(

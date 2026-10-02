@@ -1,9 +1,13 @@
 import os
+import sys
 from pathlib import Path
 from datetime import datetime
 from argparse import ArgumentParser
 
 from dotenv import load_dotenv
+
+import torch
+import torchvision
 
 from src.config_reader import ConfigReader
 from src.models.utils import ModelTrainer, ModelTester, ModelStorage
@@ -69,7 +73,7 @@ def run_jobs(jobs_path: str = None) -> None:
             criterion=criterion,
             log=True,
             plot_curves=True,
-            save_path=job.save_name
+            save_name=job.save_name
         )
 
         ModelStorage.add_test_results(job.save_name, evaluation.payload)
@@ -83,4 +87,9 @@ if __name__ == '__main__':
         default=None
     )
     args = parser.parse_args()
+
+    print("--- Environment ---")
+    print(f"system version: {sys.version}")
+    print(f"PyTorch version: {torch.__version__}")
+    print(f"Torchvision version: {torchvision.__version__}")
     run_jobs(args.jobs_path)

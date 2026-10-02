@@ -1,62 +1,43 @@
-import os
-import json
-from pathlib import Path
 from datetime import datetime
 from argparse import ArgumentParser
 
-from torch.utils.data import DataLoader
-
-from src.data.training_parameters import TrainingParameters
-from src.data.kits_dataset import Kits23Dataset
 from src.models.utils.model_trainer import ModelTrainer
 from src.models.utils.model_storage import ModelStorage
+from src.data.utils import get_data_loaders
 
 
 def continue_training(save_name: str, learning_rate: float, epochs: int):
     model = ModelStorage.load_model(save_name)
-    split_path = model.train_data_path
-    with Path.open(split_path, 'r+') as fh:
-        split = json.load(fh)
-    train_set = Kits23Dataset(split['train_slices'])
-    validation_set = Kits23Dataset(split['validation_slices'])
-    train_loader = DataLoader(
-        train_set,
-        batch_size=int(os.getenv("TRAIN_BATCH_SIZE")),
-        shuffle=True
+    config = ModelStorage.load_config(save_name)
+    train_loader, validation_loader, _ = get_data_loaders(
+        config.dataset,
+        get_train_loader=True, train_batch_size=config.train_batch_size,
+        get_validation_loader=True, validation_batch_size=config.validation_batch_size,
     )
-    validation_loader = DataLoader(
-        validation_set,
-        batch_size=int(os.getenv("VALIDATION_BATCH_SIZE")),
-        shuffle=False
-    )
+    criterion, kwargs = config.get_criterion()
+    criterion = criterion(**kwargs)
+    optimizer, kwargs = config.get_optimizer(learning_rate=learning_rate)
+    optimizer = optimizer(model.parameters(), **kwargs)
+    scheduler, kwargs = config.get_scheduler()
+    scheduler = scheduler(optimizer, **kwargs)
 
     trainer = ModelTrainer(
         train_loader,
         validation_loader,
-        criterion=model.criterion,
-        optimizer=model.optimizer,
-        scheduler=model.scheduler
     )
 
     training_results = trainer.train_model(
-        model,
-        epochs,
+        model=model,
+        epochs=epochs,
+        criterion=criterion,
+        optimizer=optimizer,
+        scheduler=scheduler,
         log=True
-    )
-
-    training_results['parameters'] = TrainingParameters.get_training_parameters(
-        epochs,
-        learning_rate,
-        True,
-        model.pretrained,
-        model.criterion,
-        model.optimizer,
-        model.scheduler,
     )
 
     now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
     model.train_time = now
-    ModelStorage.add_test_results(
+    ModelStorage.add_training(
         save_name,
         training_results
     )

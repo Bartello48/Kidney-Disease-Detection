@@ -52,7 +52,7 @@ class ConfigReader():
 
     def get_criterion(self) -> tuple:
         criterion = self.criterions[self.data['criterion']['name']]
-        kwargs = self.data['criterion']['kwargs']
+        kwargs = self.data['criterion']['kwargs'].copy()
         if "pos_weight" in kwargs:
             kwargs["pos_weight"] = torch.tensor(
                 kwargs["pos_weight"],
@@ -60,16 +60,18 @@ class ConfigReader():
             )
         return criterion, kwargs
 
-    def get_optimizer(self) -> tuple:
+    def get_optimizer(self, learning_rate: float = None) -> tuple:  # override lr
         optimizer = self.optimizers[self.data['optimizer']['name']]
-        kwargs = self.data['optimizer']['kwargs']
+        kwargs = self.data['optimizer']['kwargs'].copy()
         if not kwargs:
             kwargs['lr'] = self.learning_rate
+        if learning_rate is not None:
+            kwargs['lr'] = learning_rate
         return optimizer, kwargs
 
     def get_scheduler(self) -> tuple:
         scheduler = self.schedulers[self.data['scheduler']['name']]
-        kwargs = self.data['scheduler']['kwargs']
+        kwargs = self.data['scheduler']['kwargs'].copy()
         return scheduler, kwargs
 
     @property

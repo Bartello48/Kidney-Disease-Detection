@@ -37,7 +37,6 @@ class ModelStorage:
         data_path = model_folder / "data.json"
         payload = dict()
         payload['data_path'] = str(data_path)
-        payload['train_data_file'] = str(model.train_data_path)
         payload['adaptive_lr'] = True
         payload['training'] = [training_stats]
         payload['tests'] = []
@@ -46,7 +45,7 @@ class ModelStorage:
 
         # prepare config file
 
-        config_path = model_folder / 'conifg.yaml'
+        config_path = model_folder / 'config.yaml'
         config.save_config(config_path)
 
     @staticmethod

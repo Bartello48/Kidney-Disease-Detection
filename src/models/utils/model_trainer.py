@@ -28,7 +28,7 @@ class ModelTrainer:
         scheduler,
         epochs: int = 5,
         log: bool = True
-    ):
+    ) -> dict[str, list]:  # train lossed, validation losses, stats
         if not log:
             os.environ["TQDM_DISABLE"] = "1"
         try:
