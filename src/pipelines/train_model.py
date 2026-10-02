@@ -138,14 +138,6 @@ def train_model(
         scheduler
     )
 
-    now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-    model.train_time = now
-    ModelStorage.create_save(
-        save_name,
-        model,
-        results  # train loss, validation loss, validation scores, training params
-    )
-
 
 if __name__ == '__main__':
     print("--- Environment ---")

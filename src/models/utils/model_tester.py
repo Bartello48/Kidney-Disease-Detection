@@ -1,20 +1,15 @@
-import os
-import json
 from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
 
-from dotenv import load_dotenv
 from tqdm import tqdm
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve, auc
 from matplotlib import pyplot as plt
 
-from src.data.kits_dataset import Kits23Dataset
 from src.models.BaseModel import BaseModel
 from src.models.utils.evaluation_metric import EvaluationMetric
-from src.models.utils.model_storage import ModelStorage
 
 
 class ModelTester:
@@ -22,12 +17,14 @@ class ModelTester:
     def _run_prediction(
         model: BaseModel,
         device: torch.device,
-        test_data: DataLoader
+        test_data: DataLoader,
+        criterion=None
     ) -> list:
-        calculate_loss = model.criterion is not None
+        calculate_loss = (criterion is not None)
         running_loss = 0.0
 
         model.to(device)
+        criterion.to(device)
         model.eval()
 
         results = []
@@ -95,14 +92,20 @@ class ModelTester:
         model: BaseModel,
         test_data: DataLoader,
         device,
+        criterion=None,
         threshold_cancer: float = 0.5,
         threshold_cyst: float = 0.5,
-        log: bool = True
+        log: bool = True,
+        plot_curves: bool = False,
+        save_path: Path = None
     ) -> EvaluationMetric:
+        if device is None:
+            device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
         results = ModelTester._run_prediction(
             model,
             device,
-            test_data
+            test_data,
+            criterion=criterion
         )
 
         evaluation = ModelTester._get_results(
@@ -115,58 +118,48 @@ class ModelTester:
         if log:
             evaluation.print_results()
 
+        if plot_curves:
+            ModelTester._plot_pr_roc(results[1], save_path)
+
         return evaluation
 
-    @staticmethod
-    def get_test_data(split_path: Path) -> DataLoader:
-        with Path.open(split_path, 'r') as fh:
-            split = json.load(fh)
-            test_set = Kits23Dataset(split['test_slices'])
-            test_loader = DataLoader(
-                test_set,
-                batch_size=int(os.getenv("TEST_BATCH_SIZE")),
-                shuffle=False
-            )
-        return test_loader
+    # @staticmethod
+    # def get_test_data(split_path: Path) -> DataLoader:
+    #     with Path.open(split_path, 'r') as fh:
+    #         split = json.load(fh)
+    #         test_set = Kits23Dataset(split['test_slices'])
+    #         test_loader = DataLoader(
+    #             test_set,
+    #             batch_size=int(os.getenv("TEST_BATCH_SIZE")),
+    #             shuffle=False
+    #         )
+    #     return test_loader
+
+    # @staticmethod
+    # def test_model_memory(
+    #     save_name: str,
+    #     threshold_cancer: float = 0.5,
+    #     threshold_cyst: float = 0.5,
+    #     log: bool = True
+    # ) -> EvaluationMetric:
+    #     load_dotenv(override=True)
+    #     device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
+    #     model = ModelStorage.load_model(save_name)
+    #     model.to(device)
+    #     # test_loader = ModelTester.get_test_data(model.train_data_path)
+    #     test_loader = ModelTester.get_test_data(Path('/mnt/d/inz_data/preprocessed/first_split.json'))
+
+    #     return ModelTester.test_model(
+    #         model,
+    #         test_loader,
+    #         device,
+    #         threshold_cancer,
+    #         threshold_cyst,
+    #         log
+    #     )
 
     @staticmethod
-    def test_model_memory(
-        save_name: str,
-        threshold_cancer: float = 0.5,
-        threshold_cyst: float = 0.5,
-        log: bool = True
-    ) -> EvaluationMetric:
-        load_dotenv(override=True)
-        device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
-        model = ModelStorage.load_model(save_name)
-        model.to(device)
-        # test_loader = ModelTester.get_test_data(model.train_data_path)
-        test_loader = ModelTester.get_test_data(Path('/mnt/d/inz_data/preprocessed/first_split.json'))
-
-        return ModelTester.test_model(
-            model,
-            test_loader,
-            device,
-            threshold_cancer,
-            threshold_cyst,
-            log
-        )
-
-    @staticmethod
-    def plot_pr_roc(save_name) -> None:
-        load_dotenv(override=True)
-        device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
-        model = ModelStorage.load_model(save_name)
-        save_path = Path(os.getenv('TRAINED_MODELS'))
-        save_path = save_path / save_name
-        model.to(device)
-        # test_loader = ModelTester.get_test_data(model.train_data_path)
-        test_loader = ModelTester.get_test_data(Path('/mnt/d/inz_data/preprocessed/first_split.json'))
-        _, results = ModelTester._run_prediction(
-            model,
-            device,
-            test_loader
-        )
+    def _plot_pr_roc(results: list, save_path: Path) -> None:
         predictions = torch.stack([p for p, _ in results])
         predictions = torch.sigmoid(predictions).cpu().numpy()
         labels = torch.stack([y for _, y in results]).cpu().numpy()

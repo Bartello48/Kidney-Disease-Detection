@@ -6,6 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from src.models.BaseModel import BaseModel
+from src.config_reader import ConfigReader
 
 
 class ModelStorage:
@@ -13,7 +14,8 @@ class ModelStorage:
     def create_save(
         save_name: str,
         model: BaseModel,
-        training_stats: dict
+        training_stats: dict,
+        config: ConfigReader
     ) -> None:
         load_dotenv(override=True)
         models_folder = Path(os.getenv("TRAINED_MODELS"))
@@ -41,6 +43,11 @@ class ModelStorage:
         payload['tests'] = []
 
         ModelStorage.save_data(payload)
+
+        # prepare config file
+
+        config_path = model_folder / 'conifg.yaml'
+        config.save_config(config_path)
 
     @staticmethod
     def save_model(model: BaseModel) -> None:
@@ -101,3 +108,16 @@ class ModelStorage:
         data = ModelStorage.load_data(save_name)
         data['training'].append(training_stats)
         ModelStorage.save_data(data)
+
+    @staticmethod
+    def load_config(save_name) -> ConfigReader:
+        save_path = ModelStorage.get_save_path(save_name)
+        config_path = save_path / 'config.yaml'
+
+        return ConfigReader(config_path)
+
+    @staticmethod
+    def save_config(config: ConfigReader, save_name: str):
+        save_path = ModelStorage.get_save_path(save_name)
+        config_file = save_path / 'config.yaml'
+        config.save_config(config_file)

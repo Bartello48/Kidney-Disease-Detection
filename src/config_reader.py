@@ -26,6 +26,7 @@ class ConfigReader():
     }
 
     def __init__(self, config_file: Path) -> None:
+        self.save_name = config_file.stem
         base_config = None
         job_conifg = None
 
@@ -145,3 +146,7 @@ class ConfigReader():
         }
         with Path.open("config.yaml", 'w+') as fh:
             yaml.dump(data, fh)
+
+    def save_config(self, save_path: Path) -> None:
+        with Path.open(save_path, 'w+') as fh:
+            yaml.safe_dump(self.data, fh)
