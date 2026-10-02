@@ -1,9 +1,7 @@
-from pathlib import Path
-
 import torch
 import torch.nn as nn
 
-from src.models.BaseModel import BaseModel
+from src.models.base_model import BaseModel
 from torchvision.models import resnet50, ResNet50_Weights
 
 
