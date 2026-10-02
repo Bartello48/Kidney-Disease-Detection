@@ -4,21 +4,28 @@ import torch
 import torch.nn as nn
 
 from src.models.BaseModel import BaseModel
-from torchvision.models import resnet50
+from torchvision.models import resnet50, ResNet50_Weights
 
 
 class ResNetClassifier(BaseModel):
-    def __init__(self, train_data_path: Path, num_classes: int = 2) -> None:
+    def __init__(
+        self,
+        pretrained: bool = False,
+        num_classes: int = 2
+    ) -> None:
         super(
             ResNetClassifier,
             self,
         ).__init__(
             'resnet_50',
-            train_data_path,
             False
         )
         self.model_path = None
-        self._model = resnet50()
+
+        if pretrained:
+            self._model = resnet50(ResNet50_Weights)
+        else:
+            self._model = resnet50()
 
         old_conv = self._model.conv1
         new_conv = nn.Conv2d(

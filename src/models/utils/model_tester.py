@@ -25,7 +25,6 @@ class ModelTester:
         test_data: DataLoader
     ) -> list:
         calculate_loss = model.criterion is not None
-        print(model.criterion)
         running_loss = 0.0
 
         model.to(device)
@@ -141,7 +140,8 @@ class ModelTester:
         device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
         model = ModelStorage.load_model(save_name)
         model.to(device)
-        test_loader = ModelTester.get_test_data(model.train_data_path)
+        # test_loader = ModelTester.get_test_data(model.train_data_path)
+        test_loader = ModelTester.get_test_data(Path('/mnt/d/inz_data/preprocessed/first_split.json'))
 
         return ModelTester.test_model(
             model,
@@ -160,7 +160,8 @@ class ModelTester:
         save_path = Path(os.getenv('TRAINED_MODELS'))
         save_path = save_path / save_name
         model.to(device)
-        test_loader = ModelTester.get_test_data(model.train_data_path)
+        # test_loader = ModelTester.get_test_data(model.train_data_path)
+        test_loader = ModelTester.get_test_data(Path('/mnt/d/inz_data/preprocessed/first_split.json'))
         _, results = ModelTester._run_prediction(
             model,
             device,

@@ -4,13 +4,13 @@ import torch
 import torch.nn as nn
 
 from src.models.BaseModel import BaseModel
-from torchvision.models import efficientnet_b0
+from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
 
 class EfficientNetClassifier(BaseModel):
     def __init__(
         self,
-        train_data_path: Path,
+        pretrained: bool = False,
         num_classes: int = 2
     ) -> None:
         super(
@@ -18,12 +18,16 @@ class EfficientNetClassifier(BaseModel):
             self,
         ).__init__(
             'efficientnet_b0',
-            train_data_path,
-            False
+            pretrained
         )
 
         self.model_path = None
-        self._model = efficientnet_b0()
+        if pretrained:
+            self._model = efficientnet_b0(
+                EfficientNet_B0_Weights
+            )
+        else:
+            self._model = efficientnet_b0()
         # change 3-channel RGB to 1-channel grayscale
         old_conv = self._model.features[0][0]
         new_conv = nn.Conv2d(

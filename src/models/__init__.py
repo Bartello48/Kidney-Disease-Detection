@@ -1,5 +1,3 @@
 from .BaseModel import BaseModel
 from .efficient_net import EfficientNetClassifier
-from .efficient_net_pretrained import EfficientNetClassifierPretrained
 from .res_net import ResNetClassifier
-from .res_net_pretrained import ResNetClassifierPretrained

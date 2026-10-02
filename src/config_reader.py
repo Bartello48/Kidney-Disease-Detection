@@ -6,16 +6,14 @@ import torch.nn as nn
 import torch.optim as optim
 
 from src.models import BaseModel
-from src.models import EfficientNetClassifier, EfficientNetClassifierPretrained
-from src.models import ResNetClassifier, ResNetClassifierPretrained
+from src.models import EfficientNetClassifier
+from src.models import ResNetClassifier
 
 
 class ConfigReader():
     models = {
         'efficientnet': EfficientNetClassifier,
-        'efficientnet_pretrained': EfficientNetClassifierPretrained,
         'resnet': ResNetClassifier,
-        'resnet_pretrained': ResNetClassifierPretrained
     }
     criterions = {
         'BCEWithLogitsLoss': nn.BCEWithLogitsLoss
@@ -35,21 +33,21 @@ class ConfigReader():
         if not base_path.exists() or base_path.is_dir():
             self._restore_config()
         with Path.open(base_path, 'r+') as fh:
-            base_config = yaml.load(fh)
+            base_config = yaml.safe_load(fh)
         if base_config is None:
             raise FileExistsError("Coulld not find nor rebuild base config file")
 
         if not config_file.exists() or config_file.is_dir():
             raise FileExistsError("Could not find job config file")
         with Path.open(config_file, 'r+') as fh:
-            job_conifg = yaml.load(fh)
+            job_conifg = yaml.safe_load(fh)
         if job_conifg is None:
             raise FileExistsError("Couldnt load config file from Path provided")
 
         self.data = {**base_config, **job_conifg}
 
     def get_model(self) -> BaseModel:
-        return self.models[self.data['model']]
+        return self.models[self.data['model']](self.pretrained, 2)  # 2 - binary classes
 
     def get_criterion(self) -> tuple:
         criterion = self.criterions[self.data['criterion']['name']]
@@ -59,17 +57,23 @@ class ConfigReader():
                 kwargs["pos_weight"],
                 dtype=torch.float32,
             )
-        return criterion,
+        return criterion, kwargs
 
     def get_optimizer(self) -> tuple:
         optimizer = self.optimizers[self.data['optimizer']['name']]
         kwargs = self.data['optimizer']['kwargs']
+        if not kwargs:
+            kwargs['lr'] = self.learning_rate
         return optimizer, kwargs
 
     def get_scheduler(self) -> tuple:
         scheduler = self.schedulers[self.data['scheduler']['name']]
         kwargs = self.data['scheduler']['kwargs']
         return scheduler, kwargs
+
+    @property
+    def pretrained(self):
+        return self.data['pretrained']
 
     @property
     def seed(self):
@@ -103,6 +107,10 @@ class ConfigReader():
     def model(self):
         return self.data['model']
 
+    @property
+    def log(self):
+        return self.data['log']
+
     def _restore_config(self):
         data = {
             'seed': 2187,
@@ -111,8 +119,10 @@ class ConfigReader():
             'test_batch_size': 16,
             'learning_rate': 0.0001,
             'epochs': 5,
+            'log': True,
             'dataset': 'first-split.json',
             'model': 'efficientnet',
+            'pretrained': False,
             'criterion': {
                 'name': 'BCEWithLogitsLoss',
                 'kwargs': {

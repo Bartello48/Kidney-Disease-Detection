@@ -66,7 +66,6 @@ class ModelTrainer:
                 train_loss = running_loss / len(self.train_loader.dataset)
                 train_losses.append(train_loss)
 
-                print(f"trainer: {model.criterion}")
                 results = ModelTester.test_model(
                     model,
                     self.validation_loader,

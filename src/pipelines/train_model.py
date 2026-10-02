@@ -112,9 +112,6 @@ def train_model(
         patience=1,
         min_lr=1e-7
     )
-    model.criterion = criterion
-    model.optimizer = optimizer
-    model.scheduler = scheduler
 
     # train model
     trainer = ModelTrainer(

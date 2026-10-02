@@ -14,22 +14,14 @@ class BaseModel(nn.Module):
     def __init__(
         self,
         model_name: str,
-        train_data_path: Path,
         pretrained: bool
     ) -> None:
         super(BaseModel, self).__init__()
         self.model_name = model_name
-        self.train_data_path = train_data_path
         self.pretrained = pretrained
 
-        self.model_name: str = 'default'
         self.model_path: Path = None
-        self.train_data_path: Path = None
         self.train_time: str = None
-        self.pretrained: bool = None
-        self.criterion: torch.nn.Module = None
-        self.optimizer: torch.optim.Optimizer = None
-        self.scheduler: torch.optim.lr_scheduler = None
 
     def forward(self, x: torch.tensor) -> None:
         raise NotImplementedError(
