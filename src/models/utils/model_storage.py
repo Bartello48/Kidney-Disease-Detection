@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from src.models.BaseModel import BaseModel
+from src.models.base_model import BaseModel
 from src.config_reader import ConfigReader
 
 

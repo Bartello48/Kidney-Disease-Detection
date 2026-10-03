@@ -3,7 +3,7 @@ import os
 import torch
 from torch.utils.data import DataLoader
 
-from src.models.BaseModel import BaseModel
+from src.models.base_model import BaseModel
 from src.models.utils.model_tester import ModelTester
 
 from tqdm import tqdm

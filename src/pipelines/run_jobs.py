@@ -31,52 +31,56 @@ def run_jobs(jobs_path: str = None) -> None:
         jobs_dir = Path(os.getenv('JOBS_PATH'))
 
     for job in get_configs(jobs_dir):  # job is a description in a config file
-        train_loader, validation_loader, test_loader = get_data_loaders(
-            job.dataset,
-            True, job.train_batch_size,
-            True, job.validation_batch_size,
-            True, job.test_batch_size
-        )
-        model = job.get_model()
-        criterion, kwargs = job.get_criterion()
-        criterion = criterion(**kwargs)
-        optimizer, kwargs = job.get_optimizer()
-        optimizer = optimizer(model.parameters(), **kwargs)
-        scheduler, kwargs = job.get_scheduler()
-        scheduler = scheduler(optimizer, **kwargs)
-        trainer = ModelTrainer(
-            train_loader,
-            validation_loader,
-        )
-        results = trainer.train_model(
-            model=model,
-            epochs=job.epochs,
-            criterion=criterion,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            log=job.log
-        )
+        try:
+            train_loader, validation_loader, test_loader = get_data_loaders(
+                job.dataset,
+                True, job.train_batch_size,
+                True, job.validation_batch_size,
+                True, job.test_batch_size
+            )
+            model = job.get_model()
+            criterion, kwargs = job.get_criterion()
+            criterion = criterion(**kwargs)
+            optimizer, kwargs = job.get_optimizer()
+            optimizer = optimizer(model.parameters(), **kwargs)
+            scheduler, kwargs = job.get_scheduler()
+            scheduler = scheduler(optimizer, **kwargs)
+            trainer = ModelTrainer(
+                train_loader,
+                validation_loader,
+            )
+            results = trainer.train_model(
+                model=model,
+                epochs=job.epochs,
+                criterion=criterion,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                log=job.log
+            )
 
-        now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-        model.train_time = now
-        ModelStorage.create_save(
-            job.save_name,
-            model,
-            results,  # train loss, validation loss, validation scores, training params
-            job
-        )
+            now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+            model.train_time = now
+            ModelStorage.create_save(
+                job.save_name,
+                model,
+                results,  # train loss, validation loss, validation scores, training params
+                job
+            )
 
-        evaluation = ModelTester.test_model(
-            model,
-            test_loader,
-            device=None,
-            criterion=criterion,
-            log=True,
-            plot_curves=True,
-            save_name=job.save_name
-        )
+            evaluation = ModelTester.test_model(
+                model,
+                test_loader,
+                device=None,
+                criterion=criterion,
+                log=True,
+                plot_curves=True,
+                save_name=job.save_name
+            )
 
-        ModelStorage.add_test_results(job.save_name, evaluation.payload)
+            ModelStorage.add_test_results(job.save_name, evaluation.payload)
+        except Exception as e:
+            print(f'During the work on {job.save_name} model, an error has occured')
+            print(e)
 
 
 if __name__ == '__main__':

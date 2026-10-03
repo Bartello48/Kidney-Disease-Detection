@@ -25,14 +25,14 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('save_name')
     parser.add_argument(
-        "--threshold_cancer",
+        "--threshold-cancer",
         default=0.5,
         type=float,
         help='choose threshold for predictions, smaller predictions'
         ' will be treated as negative, resst as positive'
     )
     parser.add_argument(
-        "--threshold_cyst",
+        "--threshold-cyst",
         default=0.5,
         type=float,
         help='choose threshold for predictions, smaller predictions'

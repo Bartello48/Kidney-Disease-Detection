@@ -8,7 +8,7 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve, auc
 from matplotlib import pyplot as plt
 
-from src.models.BaseModel import BaseModel
+from src.models.base_model import BaseModel
 from src.models.utils import ModelStorage, EvaluationMetric
 from src.data.utils import get_data_loaders
 
@@ -153,12 +153,15 @@ class ModelTester:
     @staticmethod
     def _get_image_save_path(save_path: Path, suffix: str) -> Path:
         save_path = save_path / 'images'
+        save_path.mkdir(parents=True, exist_ok=True)
+
         path = save_path / f'{suffix}.png'
         if path.exists():
             counter = 1
             while (save_path / f'{suffix}_{counter}.png').exists():
                 counter += 1
-        return (save_path / f'{suffix}_{counter}.png')
+            return (save_path / f'{suffix}_{counter}.png')
+        return path
 
     @staticmethod
     def _plot_pr_roc(results: list, save_path: Path) -> None:  # ABSOLUTE SAVE PATH
