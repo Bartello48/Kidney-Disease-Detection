@@ -11,6 +11,7 @@ from src.data.kits23.kits_dataset import Kits23Dataset
 
 def get_data_loaders(
     split_name: Path,
+    slices: int = 1,
     get_train_loader: bool = False,
     train_batch_size: int = 0,
     get_validation_loader: bool = False,
@@ -34,7 +35,7 @@ def get_data_loaders(
             split = json.load(fh)
 
     if get_train_loader:
-        train_set = Kits23Dataset(split['train_slices'])
+        train_set = Kits23Dataset(split['train_slices'], slices)
         train_loader = DataLoader(
             train_set,
             batch_size=train_batch_size,
@@ -43,7 +44,7 @@ def get_data_loaders(
     else:
         train_loader = None
     if get_validation_loader:
-        validation_set = Kits23Dataset(split['validation_slices'])
+        validation_set = Kits23Dataset(split['validation_slices'], slices)
         validation_loader = DataLoader(
             validation_set,
             batch_size=validation_batch_size,
@@ -52,7 +53,7 @@ def get_data_loaders(
     else:
         validation_loader = None
     if get_test_loader:
-        test_set = Kits23Dataset(split['test_slices'])
+        test_set = Kits23Dataset(split['test_slices'], slices)
         test_loader = DataLoader(
             test_set,
             batch_size=test_batch_size,

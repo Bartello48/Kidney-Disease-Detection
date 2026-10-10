@@ -34,6 +34,7 @@ def run_jobs(jobs_path: str = None) -> None:
         try:
             train_loader, validation_loader, test_loader = get_data_loaders(
                 job.dataset,
+                job.slices,
                 True, job.train_batch_size,
                 True, job.validation_batch_size,
                 True, job.test_batch_size
