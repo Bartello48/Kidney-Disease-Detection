@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from torch.utils.data import DataLoader
 
-from src.data.kits_dataset import Kits23Dataset
+from src.data.kits23.kits_dataset import Kits23Dataset
 
 
 def get_data_loaders(

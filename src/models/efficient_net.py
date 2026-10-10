@@ -9,6 +9,7 @@ class EfficientNetClassifier(BaseModel):
     def __init__(
         self,
         pretrained: bool = False,
+        slices: int = 1,
         num_classes: int = 2
     ) -> None:
         super(

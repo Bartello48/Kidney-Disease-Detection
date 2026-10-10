@@ -1,5 +1,8 @@
 - .env file variables
-  * DATABASE_PATH="" - a file path to the training dataset
+  * DATABASE_PATH - a file path to the training dataset
+  * PREPROCESSED_PATH - a file path to a directory where preprocessed data will be saved
+  * TRAINED_MODELS - a file path to a directory where models will be saved
+  * JOBS_PATH - a path to a directory where new model configs can be found
 - run: uv run python -m pipelines.<pipeline_file_name>
 
 # DATA PREPROCESSING

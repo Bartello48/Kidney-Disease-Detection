@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 from src.models.utils.model_trainer import ModelTrainer
 from src.models.utils.model_storage import ModelStorage
-from src.data.utils import get_data_loaders
+from src.data.kits23 import get_data_loaders
 
 
 def continue_training(save_name: str, learning_rate: float, epochs: int):
@@ -50,12 +50,14 @@ if __name__ == '__main__':
         '--lr',
         type=float,
         default=0.001,
+        required=True,
         help='provide learning rate for the model',
     )
     parser.add_argument(
         '--epochs',
         type=int,
         default=5,
+        required=True,
         help='specify ammount of training epochs'
     )
     args = parser.parse_args()

@@ -9,6 +9,7 @@ class ResNetClassifier(BaseModel):
     def __init__(
         self,
         pretrained: bool = False,
+        slioces: int = 1,
         num_classes: int = 2
     ) -> None:
         super(

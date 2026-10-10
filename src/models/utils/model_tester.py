@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 
 from src.models.base_model import BaseModel
 from src.models.utils import ModelStorage, EvaluationMetric
-from src.data.utils import get_data_loaders
+from src.data.kits23 import get_data_loaders
 
 
 class ModelTester:

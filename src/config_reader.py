@@ -48,7 +48,7 @@ class ConfigReader():
         self.data = {**base_config, **job_conifg}
 
     def get_model(self) -> BaseModel:
-        return self.models[self.data['model']](self.pretrained, 2)  # 2 - binary classes
+        return self.models[self.data['model']](self.pretrained, self.slices, 2)  # 2 - binary classes
 
     def get_criterion(self) -> tuple:
         criterion = self.criterions[self.data['criterion']['name']]
@@ -77,6 +77,10 @@ class ConfigReader():
     @property
     def pretrained(self):
         return self.data['pretrained']
+
+    @property
+    def slices(self):
+        return self.data['slices']
 
     @property
     def seed(self):
@@ -126,6 +130,7 @@ class ConfigReader():
             'dataset': 'first-split.json',
             'model': 'efficientnet',
             'pretrained': False,
+            'slices': 1,
             'criterion': {
                 'name': 'BCEWithLogitsLoss',
                 'kwargs': {

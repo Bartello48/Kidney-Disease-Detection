@@ -11,7 +11,7 @@ import torchvision
 
 from src.config_reader import ConfigReader
 from src.models.utils import ModelTrainer, ModelTester, ModelStorage
-from src.data.utils.get_data_loaders import get_data_loaders
+from src.data.kits23 import get_data_loaders
 
 
 def get_configs(config_dir: Path) -> list[ConfigReader]:
