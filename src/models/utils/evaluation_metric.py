@@ -39,6 +39,22 @@ class EvaluationMetric:
         return self.fpr
 
     @property
+    def true_positive(self):
+        return self.tp
+
+    @property
+    def true_negative(self):
+        return self.tn
+
+    @property
+    def false_positive(self):
+        return self.fp
+
+    @property
+    def false_negative(self):
+        return self.fn
+
+    @property
     def payload(self):
         payload = {
             'timestamp': self.timestamp,

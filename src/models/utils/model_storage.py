@@ -15,7 +15,9 @@ class ModelStorage:
         save_name: str,
         model: BaseModel,
         training_stats: dict,
-        config: ConfigReader
+        config: ConfigReader,
+        best_loss: BaseModel = None,
+        best_f1: BaseModel = None
     ) -> None:
         load_dotenv(override=True)
         models_folder = Path(os.getenv("TRAINED_MODELS"))
@@ -27,10 +29,16 @@ class ModelStorage:
 
         # prepare model file
 
-        model_path = model_folder / "model.model"
-        model.model_path = model_path
+        model_path = model_folder / "latest_model.model"
+        ModelStorage.save_model(model, model_path)
 
-        ModelStorage.save_model(model)
+        if best_loss is not None:
+            loss_model_path = model_folder / "best_model.model"
+            ModelStorage.save_model(best_loss, loss_model_path)
+
+        if best_f1 is not None:
+            f1_model_path = model_folder / 'f1_model.model'
+            ModelStorage.save_model(best_f1, f1_model_path)
 
         # prepare data file
 
@@ -49,15 +57,53 @@ class ModelStorage:
         config.save_config(config_path)
 
     @staticmethod
-    def save_model(model: BaseModel) -> None:
-        with Path.open(model.model_path, 'wb') as fh:
+    def save_models(
+        save_name: str,
+        latest_model: BaseModel,
+        best_loss: BaseModel = None,
+        best_f1: BaseModel = None
+    ) -> None:
+        load_dotenv(override=True)
+        model_folder = Path(os.getenv("TRAINED_MODELS")) / save_name
+
+        model_path = model_folder / "latest_model.model"
+        ModelStorage.save_model(latest_model, model_path)
+
+        if best_loss is not None:
+            loss_model_path = model_folder / "best_model.model"
+            ModelStorage.save_model(best_loss, loss_model_path)
+
+        if best_f1 is not None:
+            f1_model_path = model_folder / 'f1_model.model'
+            ModelStorage.save_model(best_f1, f1_model_path)
+
+    @staticmethod
+    def save_model(model: BaseModel, save_path: Path) -> None:
+        with save_path.open('wb') as fh:
             torch.save(model, fh)
 
     @staticmethod
-    def load_model(save_name: str) -> BaseModel:
+    def load_model(save_name: str, model_type: str = 'latest') -> BaseModel:
+        """
+        model type:
+        latest: loads the model saved after last epoch
+        best: loads the model with minimal validation loss
+        best_f1: loads the model with minimal average f1 score among classes
+        """
         save_path = ModelStorage.get_save_path(save_name)
-        model_path = save_path / 'model.model'
-
+        if model_type == 'latest':
+            model_path = save_path / 'latest_model.model'
+            # support for legacy saves
+            if not model_path.exists():
+                model_path = model_path.parent / 'model.model'
+        elif model_type == 'best':
+            model_path = save_path / 'best_model.model'
+        elif model_type == 'best_f1':
+            model_path = save_path / 'f1_model.model'
+        else:
+            raise ValueError('Unidentified model type')
+        if not model_path.exists():
+            raise FileExistsError('Model does not exist')
         with Path.open(model_path, 'rb') as fh:
             model = torch.load(fh, weights_only=False)
 

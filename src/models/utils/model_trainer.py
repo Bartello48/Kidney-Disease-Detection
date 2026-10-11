@@ -1,4 +1,5 @@
 import os
+import copy
 
 import torch
 from torch.utils.data import DataLoader
@@ -14,11 +15,13 @@ class ModelTrainer:
         self,
         train_loader: DataLoader,
         validation_loader: DataLoader,
+        save_f1: bool
     ):
         self.train_loader = train_loader
         self.validation_loader = validation_loader
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
         self.device_type = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+        self.save_f1 = save_f1
 
     def train_model(
         self,
@@ -27,11 +30,15 @@ class ModelTrainer:
         optimizer,
         scheduler,
         epochs: int = 5,
-        log: bool = True
+        log: bool = True,
+        best_loss: float = float("inf"),
+        best_f1: float = 0.0
     ) -> dict[str, list]:  # train lossed, validation losses, stats
         if not log:
             os.environ["TQDM_DISABLE"] = "1"
         try:
+            best_loss_model = None
+            best_f1_model = None
             model.to(self.device)
             criterion.to(self.device)
             train_losses = []
@@ -65,13 +72,21 @@ class ModelTrainer:
 
                 results = ModelTester.test_model(
                     model,
+                    'latest',
                     self.validation_loader,
                     self.device,
                     criterion=criterion,
                     log=False  # no doubled results print
                 )
                 validation_loss = results.loss
+                if validation_loss < best_loss:
+                    best_loss_model = copy.deepcopy(model)
+                if self.save_f1:
+                    if (results.f1[0].item() + results.f1[1].item()) / 2 > best_f1:
+                        best_f1_model = copy.deepcopy(model)
                 validation_losses.append(validation_loss)
+                results_dict = results.payload
+                results_dict['learning_rate'] = optimizer.param_groups[0]['lr']
 
                 scheduler.step(validation_loss)
                 current_lr = optimizer.param_groups[0]['lr']
@@ -83,13 +98,13 @@ class ModelTrainer:
                         new learning rate: {current_lr}"""
                     )
                     results.print_results()
-                statistics.append(results.payload)
+                statistics.append(results_dict)
 
             return {
                 'train losses': train_losses,
                 'validation losses': validation_losses,
                 'statistics': statistics
-            }
+            }, best_loss_model, best_f1_model
 
         finally:
             os.environ["TQDM_DISABLE"] = "0"

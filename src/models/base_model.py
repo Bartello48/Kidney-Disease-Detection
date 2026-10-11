@@ -20,7 +20,6 @@ class BaseModel(nn.Module):
         self.model_name = model_name
         self.pretrained = pretrained
 
-        self.model_path: Path = None
         self.train_time: str = None
 
     def forward(self, x: torch.tensor) -> None:

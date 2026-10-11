@@ -21,7 +21,7 @@ def get_configs(config_dir: Path) -> list[ConfigReader]:
     return jobs
 
 
-def run_jobs(jobs_path: str = None) -> None:
+def run_jobs(save_f1: bool, jobs_path: str = None) -> None:
     load_dotenv(override=True)
     if jobs_path is not None:
         jobs_dir = Path(jobs_path)
@@ -39,6 +39,7 @@ def run_jobs(jobs_path: str = None) -> None:
                 True, job.validation_batch_size,
                 True, job.test_batch_size
             )
+
             model = job.get_model()
             criterion, kwargs = job.get_criterion()
             criterion = criterion(**kwargs)
@@ -46,30 +47,37 @@ def run_jobs(jobs_path: str = None) -> None:
             optimizer = optimizer(model.parameters(), **kwargs)
             scheduler, kwargs = job.get_scheduler()
             scheduler = scheduler(optimizer, **kwargs)
+
             trainer = ModelTrainer(
                 train_loader,
                 validation_loader,
+                save_f1
             )
-            results = trainer.train_model(
+
+            results, best_loss_model, best_f1_model = trainer.train_model(
                 model=model,
                 epochs=job.epochs,
                 criterion=criterion,
                 optimizer=optimizer,
                 scheduler=scheduler,
-                log=job.log
+                log=job.log,
             )
 
             now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
             model.train_time = now
+
             ModelStorage.create_save(
                 job.save_name,
                 model,
                 results,  # train loss, validation loss, validation scores, training params
-                job
+                job,
+                best_loss=best_loss_model,
+                best_f1=best_f1_model
             )
 
             evaluation = ModelTester.test_model(
                 model,
+                'latest',
                 test_loader,
                 device=None,
                 criterion=criterion,
@@ -89,7 +97,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--jobs-path',
         type=str,
-        default=None
+        default=None,
+        help='Provide alternative path to jobs folder'
+    )
+    parser.add_argument(
+        '--save-best-f1',
+        action='store_true',
+        help='If present the training module will also save the model with best F1 score'
     )
     args = parser.parse_args()
 
@@ -97,4 +111,4 @@ if __name__ == '__main__':
     print(f"system version: {sys.version}")
     print(f"PyTorch version: {torch.__version__}")
     print(f"Torchvision version: {torchvision.__version__}")
-    run_jobs(args.jobs_path)
+    run_jobs(args.save_best_f1, args.jobs_path)

@@ -22,12 +22,11 @@ class EfficientNetClassifier(BaseModel):
 
         if slices not in (1, 3, 5, 7):
             raise ValueError(f"Unsuppoerted number of slices: {slices}")
-        self.model_path = None
         self.slices = slices
 
         if pretrained:
             self._model = efficientnet_b0(
-                EfficientNet_B0_Weights
+                weights=EfficientNet_B0_Weights.DEFAULT
             )
         else:
             self._model = efficientnet_b0()
@@ -46,21 +45,21 @@ class EfficientNetClassifier(BaseModel):
         )
         with torch.no_grad():
             # distributes averaged weight evenly across all slices
-            # mean_weight = old_conv.weight.mean(dim=1, keepdim=True)
-            # new_conv.weight.copy_(
-            #     mean_weight.repeat(1, self.slices, 1, 1)
-            #     * (old_conv.in_channels / self.slices)
-            # )
+            mean_weight = old_conv.weight.mean(dim=1, keepdim=True)
+            new_conv.weight.copy_(
+                mean_weight.repeat(1, self.slices, 1, 1)
+                * (old_conv.in_channels / self.slices)
+            )
             # ---
 
             # set all dimentions to 0, exept for middle one
-            new_conv.weight.zero_()
+            # new_conv.weight.zero_()
 
-            center = self.slices // 2
+            # center = self.slices // 2
 
-            new_conv.weight[:, center:center + 1].copy_(
-                old_conv.weight.sum(dim=1, keepdim=True)
-            )
+            # new_conv.weight[:, center:center + 1].copy_(
+            #     old_conv.weight.sum(dim=1, keepdim=True)
+            # )
             # ---
 
             if old_conv.bias is not None:

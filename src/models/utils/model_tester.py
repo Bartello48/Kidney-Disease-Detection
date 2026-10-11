@@ -92,6 +92,7 @@ class ModelTester:
     @staticmethod
     def test_model(
         model: BaseModel,
+        model_type: str,
         test_data: DataLoader,
         device=None,
         criterion=None,
@@ -121,27 +122,34 @@ class ModelTester:
             evaluation.print_results()
 
         if plot_curves:
-            ModelTester._plot_pr_roc(results[1], ModelStorage.get_save_path(save_name))
+            ModelTester._plot_pr_roc(
+                results[1],
+                ModelStorage.get_save_path(save_name),
+                model_type
+            )
 
         return evaluation
 
     @staticmethod
     def test_model_memory(
         save_name: str,
+        model_type: str,
         threshold_cancer: float = 0.5,
         threshold_cyst: float = 0.5,
         log: bool = True,
         plot_curves: bool = False
     ) -> EvaluationMetric:
-        model = ModelStorage.load_model(save_name)
+        model = ModelStorage.load_model(save_name, model_type)
         config = ModelStorage.load_config(save_name)
         _, _, test_loader = get_data_loaders(
             config.dataset,
+            slices=config.slices,
             get_test_loader=True, test_batch_size=config.test_batch_size
         )
 
         return ModelTester.test_model(
             model,
+            model_type,
             test_data=test_loader,
             threshold_cancer=threshold_cancer,
             threshold_cyst=threshold_cyst,
@@ -164,7 +172,7 @@ class ModelTester:
         return path
 
     @staticmethod
-    def _plot_pr_roc(results: list, save_path: Path) -> None:  # ABSOLUTE SAVE PATH
+    def _plot_pr_roc(results: list, save_path: Path, model_type: str) -> None:  # ABSOLUTE SAVE PATH
         predictions = torch.stack([p for p, _ in results])
         predictions = torch.sigmoid(predictions).cpu().numpy()
         labels = torch.stack([y for _, y in results]).cpu().numpy()
@@ -193,7 +201,7 @@ class ModelTester:
             plt.grid()
             path = ModelTester._get_image_save_path(
                 save_path,
-                f"{class_name}_pr-auc"
+                f"{model_type}_model_{class_name}_pr-auc"
             )
             plt.savefig(path)
             plt.close()
@@ -224,7 +232,7 @@ class ModelTester:
             plt.grid()
             path = ModelTester._get_image_save_path(
                 save_path,
-                f"{class_name}_roc"
+                f"{model_type}_model_{class_name}_roc"
             )
             plt.savefig(path)
             plt.close()
