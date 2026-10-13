@@ -25,7 +25,7 @@ class ResNetClassifier(BaseModel):
         self.slices = slices
 
         if pretrained:
-            self._model = resnet50(ResNet50_Weights)
+            self._model = resnet50(weights=ResNet50_Weights.DEFAULT)
         else:
             self._model = resnet50()
 

@@ -196,7 +196,7 @@ class ModelTester:
             )
             plt.xlabel("Recall")
             plt.ylabel("Precission")
-            plt.title("Precision-Recall Curve")
+            plt.title(f"{model_type} model: Precision-Recall Curve")
             plt.legend()
             plt.grid()
             path = ModelTester._get_image_save_path(
@@ -227,7 +227,7 @@ class ModelTester:
             )
             plt.xlabel("False Positive Rate")
             plt.ylabel("True Positive Rate")
-            plt.title("ROC Curve")
+            plt.title(f"{model_type} model: ROC Curve")
             plt.legend()
             plt.grid()
             path = ModelTester._get_image_save_path(

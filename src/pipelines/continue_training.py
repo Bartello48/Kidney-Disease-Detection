@@ -27,6 +27,23 @@ def continue_training(
     scheduler, kwargs = config.get_scheduler()
     scheduler = scheduler(optimizer, **kwargs)
 
+    data = ModelStorage.load_data(save_name=args.save_name)
+    best_loss = min(
+        [loss for run in data['training'] for loss in run['validation losses']]
+    )
+    worst_loss = max(
+        [loss for run in data['training'] for loss in run['validation losses']]
+    )
+    print(f'best loss: {best_loss}, worst loss: {worst_loss}')
+    best_f1 = max(
+        [
+            (entry["cancer"]["f1"] + entry["cyst"]["f1"]) / 2
+            for run in data["training"]
+            for entry in run["statistics"]
+        ]
+    )
+    print(f'best_f1: {best_f1}')
+
     trainer = ModelTrainer(
         train_loader,
         validation_loader,
@@ -39,7 +56,9 @@ def continue_training(
         criterion=criterion,
         optimizer=optimizer,
         scheduler=scheduler,
-        log=True
+        log=True,
+        best_loss=best_loss,
+        best_f1=best_f1
     )
 
     now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
