@@ -80,9 +80,13 @@ class ModelTrainer:
                 )
                 validation_loss = results.loss
                 if validation_loss < best_loss:
+                    if log:
+                        print('New model has achieved best validation loss')
                     best_loss_model = copy.deepcopy(model)
                 if self.save_f1:
                     if (results.f1[0].item() + results.f1[1].item()) / 2 > best_f1:
+                        if log:
+                            print('New model has achieved best f1 score')
                         best_f1_model = copy.deepcopy(model)
                 validation_losses.append(validation_loss)
                 results_dict = results.payload

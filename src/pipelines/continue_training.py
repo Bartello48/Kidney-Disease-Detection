@@ -31,10 +31,6 @@ def continue_training(
     best_loss = min(
         [loss for run in data['training'] for loss in run['validation losses']]
     )
-    worst_loss = max(
-        [loss for run in data['training'] for loss in run['validation losses']]
-    )
-    print(f'best loss: {best_loss}, worst loss: {worst_loss}')
     best_f1 = max(
         [
             (entry["cancer"]["f1"] + entry["cyst"]["f1"]) / 2
@@ -42,7 +38,6 @@ def continue_training(
             for entry in run["statistics"]
         ]
     )
-    print(f'best_f1: {best_f1}')
 
     trainer = ModelTrainer(
         train_loader,
