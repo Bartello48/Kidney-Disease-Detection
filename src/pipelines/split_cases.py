@@ -1,20 +1,26 @@
+import os
 import json
 import random
 from pathlib import Path
 from datetime import datetime
+from argparse import ArgumentParser
+
+from dotenv import load_dotenv
 
 
 def split_cases(
-    data_path: str,
+    data_folder: str,
     file_name: str,
     train_ratio: float = 0.7,
     validation_ratio: float = 0.15,
-    seed: int = 2187
+    seed: int = 31415926321589723746264
 ) -> dict:
+    load_dotenv(override=True)
+    data_path = Path(os.getenv("PREPROCESSED_PATH"))
     if train_ratio + validation_ratio > 1:
         raise ArithmeticError("sets ratio exceeds 100%")
-    data_path = Path(data_path)
-    slices_path = data_path / "slices"
+    slices_path = data_path / data_folder
+
     # now not using dictionary with slices count, may be raplaced by just counting
     case_slice_count = dict()  # case_id: slices_count
     for path in slices_path.glob("*.pt"):
@@ -74,3 +80,20 @@ def split_cases(
         )
 
     return payload
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument(
+        'data_folder',
+        type=str
+    )
+    parser.add_argument(
+        'split_name',
+        type=str
+    )
+    args = parser.parse_args()
+    split_cases(
+        data_folder=args.data_folder,
+        file_name=args.split_name
+    )

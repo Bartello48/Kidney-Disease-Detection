@@ -90,10 +90,11 @@ def process_case(
 
 
 def preprocess_data(
-    hu_min: int = -200,
-    hu_max: int = 300,
-    box_size: int = 256,
-    margin: int = 20
+    hu_min: int,  # -200
+    hu_max: int,  # 300
+    box_size: int,  # 256
+    margin: int,  # 20
+    folder_name: str
 ) -> None:
     load_dotenv(override=True)
     source_path = Path(os.getenv("DATABASE_PATH"))
@@ -101,7 +102,7 @@ def preprocess_data(
 
     destination_path = (
         destination_path
-        / 'slices'
+        / f'{folder_name}'
     )
     destination_path.mkdir(
         parents=True,
@@ -130,15 +131,37 @@ def preprocess_data(
 if __name__ == '__main__':
     parser = ArgumentParser()
 
-    parser.add_argument('hu_min')
-    parser.add_argument('hu_max')
-    parser.add_argument('box_size')
-    parser.add_argument('margin')
+    parser.add_argument(
+        'hu_min',
+        type=int,
+        default=-200
+    )
+    parser.add_argument(
+        'hu_max',
+        type=int,
+        default=300
+    )
+    parser.add_argument(
+        'box_size',
+        type=int,
+        default=256
+    )
+    parser.add_argument(
+        'margin',
+        type=int,
+        default=20
+    )
+    parser.add_argument(
+        'folder_name',
+        type=str,
+        help='name folder to put preprocessed slices'
+    )
     arguments = parser.parse_args()
 
     preprocess_data(
-        int(arguments.hu_min),
-        int(arguments.hu_max),
-        int(arguments.box_size),
-        int(arguments.margin)
+        arguments.hu_min,
+        arguments.hu_max,
+        arguments.box_size,
+        arguments.margin,
+        arguments.folder_name
     )
