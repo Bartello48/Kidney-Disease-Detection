@@ -83,11 +83,14 @@ class ModelTrainer:
                     if log:
                         print('New model has achieved best validation loss')
                     best_loss_model = copy.deepcopy(model)
+                    best_loss = validation_loss
                 if self.save_f1:
-                    if (results.f1[0].item() + results.f1[1].item()) / 2 > best_f1:
+                    average_f1 = (results.f1[0].item() + results.f1[1].item()) / 2
+                    if average_f1 > best_f1:
                         if log:
                             print('New model has achieved best f1 score')
                         best_f1_model = copy.deepcopy(model)
+                        best_f1 = average_f1
                 validation_losses.append(validation_loss)
                 results_dict = results.payload
                 results_dict['learning_rate'] = optimizer.param_groups[0]['lr']

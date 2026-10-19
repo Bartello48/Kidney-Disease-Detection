@@ -15,7 +15,6 @@ from src.data.preprocessing import normalize_hu
 from src.data.preprocessing import resize
 
 
-
 def preprocess_data(
     image,
     mask,
